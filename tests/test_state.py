@@ -1,9 +1,7 @@
 import pytest
 
-#from bellatrix.src.bellatrix.scan.state import State
-#from bellatrix.src.bellatrix.scan.scan import Scan
-from bellatrix.scan.scan import Scan
-from bellatrix.scan.state import State
+from bellastore.utils.scan import Scan
+from bellastore.utils.state import State
 
 # ----------------- #
 # --- S T A T E --- #
@@ -12,6 +10,7 @@ from bellatrix.scan.state import State
 def test_state():
     """Tests the State initialization"""
     state = State()
+    
 
 def test_is_valid():
     """Tests if a simple state is valid"""
