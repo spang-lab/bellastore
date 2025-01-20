@@ -1,0 +1,15 @@
+[build-system]
+requires = [
+    "setuptools>=61.0",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bellastore"
+version = "0.0.1"
+description = "Storage manager for FDLP project"
+readme = "README.md"
+authors = [
+    {name = "Paul Huettl"},
+    {name = "Lukas Wolfseher"},
+]

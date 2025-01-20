@@ -1,0 +1,13 @@
+# Data and test data folders
+data/*
+
+# IDE.related folders
+.vscode/
+.idea/
+
+# Cache folders
+__pycache__/
+.pytest_cache
+
+# pkg folders
+*.egg-info
