@@ -6,7 +6,7 @@ import glob
 import shutil
 import sqlite3
 
-from .utils.scan import Scan
+from bellastore.utils.scan import Scan
 from .constants import scan_extensions_glob, scan_extensions, tables
 from typing import List, Dict, Tuple
 from concurrent.futures import ThreadPoolExecutor
