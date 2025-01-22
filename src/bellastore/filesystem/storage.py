@@ -2,6 +2,7 @@ from typing import List, Dict, Tuple
 import os
 import glob
 import shutil
+from pathlib import Path
 import sqlite3
 from concurrent.futures import ThreadPoolExecutor
 
@@ -39,8 +40,11 @@ class Storage():
             # Move the slide file itself (for non-`.mrxs` cases, this is enough)
             if verbose:
                 print(f"Moving {slide_path} to {target_folder}")
-            # TODO: Lukas check if this makes sense for mxrs
+            # TODO: Lukas check if this makes sense also for mxrs
             dest = shutil.move(slide_path, target_folder)
+            p = Path(slide_path)
+            Path.rmdir(p.parents[0])
+
 
             # If it's an `.mrxs` file, we need to also move the directory too (has same name)
             if is_mrxs:
@@ -51,6 +55,8 @@ class Storage():
                 if verbose:
                     print(f"Moving {mrxs_folder} to {target}")
                 dest = shutil.move(mrxs_folder, target) 
+                p = Path(mrxs_folder)
+                Path.rmdir(p)
             return dest
 
         # Generate folders with name being `scan.hash` and move the scans into there

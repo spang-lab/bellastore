@@ -29,7 +29,6 @@ def txt_scan(tmp_path_factory):
 def root_dir(tmp_path_factory):
     root_dir = tmp_path_factory.mktemp("root")
     yield root_dir
-    
 
 
 class IngressFs:
@@ -170,7 +169,3 @@ def get_tables(path: str):
 def get_scheme(path: str, table: str):
     scheme = execute_sql(path, f"PRAGMA table_info({table});")
     return scheme
-
-
-
-
