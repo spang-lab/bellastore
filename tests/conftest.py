@@ -26,9 +26,14 @@ def txt_scan(tmp_path_factory):
 def root_dir(tmp_path_factory):
     root_dir = tmp_path_factory.mktemp("root")
     yield root_dir
+    
 
 
-class TestFs:
+class IngressFs:
+    '''
+    This is a filesystem that has 2 valid scanner slides in its ingress,
+    and non in its storage
+    '''
     def __init__(self, root_dir):
         self.root_dir = root_dir
         self.storage_dir = _j(root_dir, "storage")
@@ -48,17 +53,18 @@ class TestFs:
         # Create 2 DIFFERENT scans
         self.scan_1_path = _j(self.scan_1_dir, "test_scan_1.ndpi")
         with open(self.scan_1_path, 'w') as f:
-            f.write('scan_1')
+            f.write('test_scan_1.ndpi')
             f.close
         self.scan_2_path = _j(self.scan_2_dir, "test_scan_2.ndpi")
         with open(self.scan_2_path, 'w') as f:
-            f.write('scan_2')
+            f.write('test_scan_2.ndpi')
             f.close
+        self.files = {self.scan_1_path, self.scan_2_path}
 
 @pytest.fixture(scope="session")
-def fs(root_dir):
-    test_fs = TestFs(root_dir)
-    yield test_fs
+def ingress_fs(root_dir):
+    ingress_fs = IngressFs(root_dir)
+    yield ingress_fs
 
 @pytest.fixture(scope="session")
 def hashed_scans(fs):

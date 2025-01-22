@@ -27,6 +27,9 @@ def test_db_initialization(empty_scan_db):
 
 
 
+
+
+
 # def test_database_initialization(filesystem):
 #     """Initializes the database to the current storage"""
 #     dbase = ScanDatabase(path = _j(filesystem, "storage"), update_database = True)
