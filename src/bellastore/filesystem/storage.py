@@ -247,6 +247,9 @@ class Storage():
                 scan.state.move_forward()
                 scan.hash = scan.hash_scan()
                 scan.state.move_forward()
+                # now the slide is only hashed, but as it is also in storage we give it
+                # the storage state
+                scan.state.move_forward()
                 return (hash_value, scan)
 
             with ThreadPoolExecutor() as executor:

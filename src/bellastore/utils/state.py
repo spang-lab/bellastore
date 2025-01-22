@@ -5,7 +5,7 @@ from typing import List, Dict, Union, Tuple, Literal
 
 
 
-StatusType = Literal["none", "valid", "hashed", "storage", "slide"]
+StatusType = Literal["none", "valid", "hashed", "storage", "storage_db", "slide"]
 
 class State():
     """
@@ -32,6 +32,7 @@ class State():
             "valid": False,
             "hashed": False,
             "storage": False,
+            "storage_db": False,
             "slide": False
         }
 
@@ -124,6 +125,7 @@ class State():
 """
 - VALID: valid scanner vendor
 - HASHED: slide included in ingress in `scans.sqlite`
-- STORAGE: slide in storage in `scans.sqlite`, i.e. it is in (`/data/deep-learning/slides`) (and stored within correct hashed directory)
+- STORAGE: slide in storage (and stored within correct hashed directory)
+- STORAGE_DB: slide in in `scans.sqlite`
 - SLIDE: slide.sqlite in storage folder, i.e. converted by pamly (this is where Paul's Slide() class takes off)
 """

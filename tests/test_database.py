@@ -5,14 +5,13 @@ from os.path import join as _j
 from conftest import execute_sql, get_tables, get_scheme
 from bellastore.database.database import ScanDatabase
 
-def test_db_initialization(filesystem):
-    scan_db = ScanDatabase(filesystem)
-    tables = get_tables(scan_db.sqlite_path)
-    assert not scan_db.sqlite_path == None
+def test_db_initialization(empty_scan_db):
+    tables = get_tables(empty_scan_db.sqlite_path)
+    assert not empty_scan_db.sqlite_path == None
     assert 'ingress' in tables
     assert 'storage' in tables
     for table in tables:
-        scheme = get_scheme(scan_db.sqlite_path, table)
+        scheme = get_scheme(empty_scan_db.sqlite_path, table)
         if table == 'ingress':
             assert [(0, 'hash', 'TEXT', 0, None, 0), (1, 'filepath', 'TEXT', 0, None, 0), (2, 'filename', 'TEXT', 0, None, 0)] == scheme
         elif table == 'storage':

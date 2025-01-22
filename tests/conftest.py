@@ -5,6 +5,7 @@ import sqlite3
 from typing import Generator
 
 from bellastore.utils.scan import Scan
+from bellastore.database.database import ScanDatabase
     
 
 
@@ -71,13 +72,11 @@ def hashed_scans(fs):
     scan_2.state.move_forward()
     return [scan_1, scan_2]
 
+@pytest.fixture(scope="session")
+def empty_scan_db(root_dir):
+    scan_db = ScanDatabase(root_dir)
+    yield scan_db
 
-# @pytest.fixture
-# def db_connection(filesystem):
-#     conn = sqlite3.connect(_j(filesystem,"scans.sqlite"))
-#     conn.execute("PRAGMA foreign_keys = ON")
-#     yield conn
-#     conn.close()
 
 def execute_sql(path: str, query: str, params: tuple = ()) -> list:
     """Helper function to execute SQL queries."""

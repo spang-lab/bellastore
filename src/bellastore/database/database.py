@@ -5,8 +5,6 @@
 import sqlite3
 import os
 
-# TODO: where to put such classes ?
-# from ..scan import Scan
 from .tables import check_tables
 from .constants import scan_extensions_glob, scan_extensions
 from typing import List, Dict, Tuple
