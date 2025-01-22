@@ -43,6 +43,7 @@ class IngressFs:
         # Define directory structure
         dirs = [
             self.storage_dir,
+            self.ingress_dir,
             self.scan_1_dir,
             self.scan_2_dir
         ]
@@ -75,6 +76,59 @@ def hashed_scans(ingress_fs):
     scan_2 = Scan(ingress_fs.scan_2_path)
     scan_2.state.move_forward()
     scan_2.hash = scan_2.hash_scan()
+    scan_2.state.move_forward()
+    return [scan_1, scan_2]
+
+class StorageFs:
+    '''
+    This is a filesystem that has 2 valid scanner slides in its storage,
+    and none in its ingress
+    '''
+    def __init__(self, root_dir):
+        self.root_dir = root_dir
+        self.storage_dir = _j(root_dir, "storage")
+        self.ingress_dir = _j(root_dir, "ingress")
+        self.scan_1_dir = _j(self.storage_dir, "scan_1")
+        self.scan_2_dir = _j(self.storage_dir, "scan_2")
+        # Define directory structure
+        dirs = [
+            self.storage_dir,
+            self.ingress_dir,
+            self.scan_1_dir,
+            self.scan_2_dir
+        ]
+        # Create all directories
+        for dir_path in dirs:
+            os.makedirs(dir_path, exist_ok=True)
+        
+        # Create 2 DIFFERENT scans
+        self.scan_1_path = _j(self.scan_1_dir, "test_scan_1.ndpi")
+        with open(self.scan_1_path, 'w') as f:
+            f.write('test_scan_1.ndpi')
+            f.close
+        self.scan_2_path = _j(self.scan_2_dir, "test_scan_2.ndpi")
+        with open(self.scan_2_path, 'w') as f:
+            f.write('test_scan_2.ndpi')
+            f.close
+        self.files = {self.scan_1_path, self.scan_2_path}
+
+@pytest.fixture(scope="session")
+def storage_fs(root_dir):
+    storage_fs = StorageFs(root_dir)
+    yield storage_fs
+
+@pytest.fixture(scope="session")
+def storage_scans(storage_fs):
+    scan_1 = Scan(storage_fs.scan_1_path)
+    scan_1.state.move_forward()
+    scan_1.hash = scan_1.hash_scan()
+    scan_1.state.move_forward()
+    # to be in storage
+    scan_1.state.move_forward()
+    scan_2 = Scan(storage_fs.scan_2_path)
+    scan_2.state.move_forward()
+    scan_2.hash = scan_2.hash_scan()
+    scan_2.state.move_forward()
     scan_2.state.move_forward()
     return [scan_1, scan_2]
 

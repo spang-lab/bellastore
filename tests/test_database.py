@@ -34,6 +34,8 @@ def test_ingress_write(ingress_fs, empty_scan_db, hashed_scans):
     ingress_entries_paths = {ingress_entry[1] for ingress_entry in ingress_entries}
     assert {hashed_scans[0].hash, hashed_scans[1].hash} == ingress_entries_hashes
     assert {hashed_scans[0].path, hashed_scans[1].path} == ingress_entries_paths
+
+
     
     
 

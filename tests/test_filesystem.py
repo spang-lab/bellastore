@@ -29,19 +29,24 @@ def test_storage_insert_files(ingress_fs, hashed_scans):
         assert scan.path == _j(ingress_fs.storage_dir, scan.hash, scan.filename)
         assert scan.state.get_state() == 'storage'
 
-def test_storage_get_existing_slides(ingress_fs, empty_scan_db, hashed_scans):
+def test_storage_check_storage_integrity(ingress_fs, empty_scan_db):
+    storage = Storage(ingress_fs.storage_dir)
+    assert storage.check_storage_integrity(empty_scan_db.sqlite_path, check_sqlite = True)
+
+def test_storage_get_existing_slides(storage_fs, empty_scan_db, storage_scans):
+    storage = Storage(storage_fs.storage_dir)
     scans_in_storage = storage.get_existing_slides(empty_scan_db.sqlite_path)
     # check equality of filenames
     files_in_storage = {scan.filename for scan in scans_in_storage}
-    hashed_files = {scan.filename for scan in hashed_scans}
+    hashed_files = {scan.filename for scan in storage_scans}
     assert hashed_files == files_in_storage
     # check equality of hashes
     hashes_in_storage = {scan.hash for scan in scans_in_storage}
-    hashes = {scan.hash for scan in hashed_scans}
+    hashes = {scan.hash for scan in storage_scans}
     assert hashes_in_storage == hashes
     # check equality of states
     states_in_storage = {scan.state.get_state() for scan in scans_in_storage}
-    states = {scan.state.get_state() for scan in hashed_scans}
+    states = {scan.state.get_state() for scan in storage_scans}
     assert states_in_storage == states
 
     

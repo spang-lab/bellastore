@@ -147,11 +147,13 @@ class Storage():
         # ----------------------------------------------------- #
         # --- COMPARE THE CALCULATED TO THE EXISTING HASHES --- #
         # ----------------------------------------------------- #
-
         for folder_name, scan_file, calculated_hash in results:
+            # TODO: Lukas check
             if calculated_hash != folder_name:
-                has_integrity = False
-                raise RuntimeError(f"Hash mismatch for file {scan_file} in folder {folder_name}")
+                print(f"Current folder name {folder_name} is not matching hash {calculated_hash}, so folder will be renamed.")
+                os.rename(os.path.join(self.path, folder_name), os.path.join(self.path, calculated_hash))
+                # has_integrity = False
+                # raise RuntimeError(f"Hash mismatch for file {scan_file} in folder {folder_name}")
 
             if check_sqlite:
                 if calculated_hash not in existing_hashes:
