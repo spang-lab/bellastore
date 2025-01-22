@@ -4,6 +4,7 @@ from os.path import join as _j
 
 from conftest import execute_sql, get_tables, get_scheme
 from bellastore.database.database import ScanDatabase
+from bellastore.database.ingress import IngressTable
 
 def test_db_initialization(empty_scan_db):
     tables = get_tables(empty_scan_db.sqlite_path)
@@ -24,6 +25,19 @@ def test_db_initialization(empty_scan_db):
             # 4) there is no default
             # 5) it is the primary key
             assert (0, 'hash', 'TEXT', 1, None, 1) in scheme
+
+def test_ingress_write(ingress_fs, empty_scan_db, hashed_scans):
+    ingress_table = IngressTable(empty_scan_db.sqlite_path)
+    ingress_table.write(ingress_fs.files)
+    ingress_entries = ingress_table.read_all()
+    ingress_entries_hashes = {ingress_entry[0] for ingress_entry in ingress_entries}
+    ingress_entries_paths = {ingress_entry[1] for ingress_entry in ingress_entries}
+    assert {hashed_scans[0].hash, hashed_scans[1].hash} == ingress_entries_hashes
+    assert {hashed_scans[0].path, hashed_scans[1].path} == ingress_entries_paths
+    
+    
+
+
 
 
 

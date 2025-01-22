@@ -67,12 +67,12 @@ def ingress_fs(root_dir):
     yield ingress_fs
 
 @pytest.fixture(scope="session")
-def hashed_scans(fs):
-    scan_1 = Scan(fs.scan_1_path)
+def hashed_scans(ingress_fs):
+    scan_1 = Scan(ingress_fs.scan_1_path)
     scan_1.state.move_forward()
     scan_1.hash = scan_1.hash_scan()
     scan_1.state.move_forward()
-    scan_2 = Scan(fs.scan_2_path)
+    scan_2 = Scan(ingress_fs.scan_2_path)
     scan_2.state.move_forward()
     scan_2.hash = scan_2.hash_scan()
     scan_2.state.move_forward()

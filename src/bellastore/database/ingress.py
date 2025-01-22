@@ -7,11 +7,10 @@ from bellastore.utils.scan import Scan
 from .base_table import BaseTable
 
 class IngressTable(BaseTable):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, sqlite_path):
+        super().__init__(sqlite_path, 'ingress')
 
-    @classmethod  
-    def write(self, sqlite_path: str, considered_scans: List[str], verbose: bool = False) -> List[Scan]:
+    def write(self, considered_scans: List[str], verbose: bool = False) -> List[Scan]:
             """
             Writes a list of paths of scanner files and their hashes to the ingress table.
             Non-valid and already existing scans (with the same name and ingress path) will be removed from the list.
@@ -50,12 +49,12 @@ class IngressTable(BaseTable):
 
             # Open the database connection and call `INSERT OR IGNORE`
             print(f"Writing hashes to sqlite.")
-            conn = sqlite3.connect(sqlite_path)
+            conn = sqlite3.connect(self.sqlite_path)
             cursor = conn.cursor()
 
             # First get entries from ingress and check against to be inserted to avoid duplicates
             # Select existing entries based on hash, filepath, and filename
-            cursor.execute("SELECT hash, filepath, filename FROM ingress")
+            cursor.execute(f"SELECT hash, filepath, filename FROM {self.name}")
             existing_entries = set(cursor.fetchall())
 
             # Filter out scans that already exist in the ingress table
@@ -70,7 +69,7 @@ class IngressTable(BaseTable):
             for scan in valid_scans:
                 try:
                     cursor.execute(
-                        "INSERT INTO ingress (hash, filepath, filename) VALUES (?, ?, ?)",
+                        f"INSERT INTO {self.name} (hash, filepath, filename) VALUES (?, ?, ?)",
                         (scan.hash, scan.path, scan.scanname)
                     )
                 except sqlite3.IntegrityError as e:
