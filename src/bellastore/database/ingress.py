@@ -63,7 +63,7 @@ class IngressTable(BaseTable):
             # url safe base64 encoded, as the other originally was too
             valid_scans = [
                 scan for scan in valid_scans
-                if (scan.hash, scan.path, scan.filename) not in existing_entries
+                if (scan.hash, scan.path, scan.scanname) not in existing_entries
             ]
 
             # Write the non-duplicates to the ingress table
@@ -71,7 +71,7 @@ class IngressTable(BaseTable):
                 try:
                     cursor.execute(
                         "INSERT INTO ingress (hash, filepath, filename) VALUES (?, ?, ?)",
-                        (scan.hash, scan.path, scan.filename)
+                        (scan.hash, scan.path, scan.scanname)
                     )
                 except sqlite3.IntegrityError as e:
                     if verbose:

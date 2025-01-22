@@ -33,11 +33,12 @@ class Scan():
     def __init__(self, path : str):
         self.state = State()
         self.path = path
+        self.scanname = self.get_scanname(path = self.path)
         self.filename = self.get_filename(path = self.path)
         self.hash : None | str = None
 
 
-    def get_filename(self, path : str) -> str:
+    def get_scanname(self, path : str) -> str:
         """
         Returns the filename without the extension of a given path.
 
@@ -48,6 +49,18 @@ class Scan():
             filename (str): the filename without extension
         """
         return os.path.splitext(os.path.basename(path))[0]
+    
+    def get_filename(self, path : str) -> str:
+        """
+        Returns the filename without the extension of a given path.
+
+        Args:
+            path (str): full path to the file
+
+        Returns:
+            filename (str): the filename without extension
+        """
+        return os.path.basename(path)
 
 
     def is_valid(self) -> bool:

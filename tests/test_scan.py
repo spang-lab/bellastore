@@ -11,7 +11,8 @@ def test_scan(ndpi_scan):
     """Tests the Scan initialization"""
     scan = Scan(path = ndpi_scan)
     assert scan.path == ndpi_scan
-    assert scan.filename == 'test_scan'
+    assert scan.filename == 'test_scan.ndpi'
+    assert scan.scanname == 'test_scan'
 
 def test_is_valid_scan(ndpi_scan, txt_scan):
     """Test if a valid scan is valid"""
@@ -25,4 +26,5 @@ def test_hashing(ndpi_scan):
     scan = Scan(path = ndpi_scan)
     scan.state.move_forward()
     hash = scan.hash_scan()
+    print(hash)
     assert hash

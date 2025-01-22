@@ -40,7 +40,7 @@ class ScanDatabase():
         **check_storage_integrity**<em>(self, check_sqlite = False, verbose = True) -> bool</em> <br> checks if everything is all right with the storage
     </p>
     """
-    def __init__(self, path : str, update_database = False):
+    def __init__(self, path : str):
         self.path = path
         self.writeable = False
         self.sqlite_path = None

@@ -5,13 +5,14 @@ import shutil
 import sqlite3
 from concurrent.futures import ThreadPoolExecutor
 
-from .utils.scan import Scan
+from bellastore.utils.scan import Scan
 from .constants import scan_extensions_glob, scan_extensions
 
 class Storage():
     def __init__(self, path):
         self.path = path
-        os.makedirs(path, exist_ok=True)
+        # TODO: I would set that up independently of the app
+        # os.makedirs(path, exist_ok=True)
 
     def insert_files(self, scans_to_move: List[Scan]) -> List[Scan]:
         """
@@ -38,7 +39,8 @@ class Storage():
             # Move the slide file itself (for non-`.mrxs` cases, this is enough)
             if verbose:
                 print(f"Moving {slide_path} to {target_folder}")
-            shutil.move(slide_path, target_folder)
+            # TODO: Lukas check if this makes sense for mxrs
+            dest = shutil.move(slide_path, target_folder)
 
             # If it's an `.mrxs` file, we need to also move the directory too (has same name)
             if is_mrxs:
@@ -48,16 +50,19 @@ class Storage():
 
                 if verbose:
                     print(f"Moving {mrxs_folder} to {target}")
-                shutil.move(mrxs_folder, target) 
+                dest = shutil.move(mrxs_folder, target) 
+            return dest
 
         # Generate folders with name being `scan.hash` and move the scans into there
         for scan in scans_to_move:
             if scan.hash: # This condition is just for correct typing as theoretically `hash` is also allowed to be `None` (but which it can't be at this point)
                 target_folder = os.path.join(self.path, scan.hash)
-            os.makedirs(target_folder, exist_ok = False) # If the folder already exists we are in big problems - it should have been filtered out by then...
+                os.makedirs(target_folder, exist_ok = False) # If the folder already exists we are in big problems - it should have been filtered out by then...
 
-            # Move the slide to the storage folder (`.mrxs` is handled automatically)
-            __move_slide(scan.path, target_folder)
+                # Move the slide to the storage folder (`.mrxs` is handled automatically)
+                new_scan_path = __move_slide(scan.path, target_folder)
+                # of course we also need to adjust the scan path after moving
+                scan.path = new_scan_path
 
             # Moce the scan to the last state
             scan.state.move_forward()

@@ -62,7 +62,7 @@ class StorageTable(BaseTable):
             cursor.execute("""
                 INSERT INTO storage (hash, filepath, filename) 
                 VALUES (?, ?, ?)
-            """, (scan.hash, _j(storage_path, scan.hash), scan.filename))
+            """, (scan.hash, _j(storage_path, scan.hash), scan.scanname))
 
         conn.commit()
 

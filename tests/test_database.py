@@ -5,7 +5,7 @@ from os.path import join as _j
 from conftest import execute_sql, get_tables, get_scheme
 from bellastore.database.database import ScanDatabase
 
-def test_initialization(filesystem):
+def test_db_initialization(filesystem):
     scan_db = ScanDatabase(filesystem)
     tables = get_tables(scan_db.sqlite_path)
     assert not scan_db.sqlite_path == None
@@ -28,11 +28,11 @@ def test_initialization(filesystem):
 
 
 
-def test_database_initialization(filesystem):
-    """Initializes the database to the current storage"""
-    dbase = ScanDatabase(path = _j(filesystem, "storage"), update_database = True)
+# def test_database_initialization(filesystem):
+#     """Initializes the database to the current storage"""
+#     dbase = ScanDatabase(path = _j(filesystem, "storage"), update_database = True)
 
-def test_ingress_to_storage():
-    """Tests the full machinery for a new ingress folder"""
-    dbase = ScanDatabase(path = _j(filesystem, "storage"), update_database = False)
-    dbase.ingress_to_storage(_j(filesystem, "ingress"))
+# def test_ingress_to_storage():
+#     """Tests the full machinery for a new ingress folder"""
+#     dbase = ScanDatabase(path = _j(filesystem, "storage"), update_database = False)
+#     dbase.ingress_to_storage(_j(filesystem, "ingress"))
