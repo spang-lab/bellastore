@@ -3,11 +3,10 @@ import glob
 import sqlite3
 from concurrent.futures import ThreadPoolExecutor
 
-# TODO: where to put such classes ?
-from .utils.scan import Scan
-from .bellatrix_table import BellatrixTable
+from bellastore.utils.scan import Scan
+from .base_table import BaseTable
 
-class IngressTable(BellatrixTable):
+class IngressTable(BaseTable):
     def __init__(self):
         super().__init__()
 

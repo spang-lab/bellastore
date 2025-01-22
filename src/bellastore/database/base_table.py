@@ -1,4 +1,4 @@
-class BellatrixTable():
+class BaseTable():
     def __init__(self):
         super().__init__()
     

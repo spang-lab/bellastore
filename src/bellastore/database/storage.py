@@ -5,10 +5,10 @@ from concurrent.futures import ThreadPoolExecutor
 from os.path import join as _j
 
 # TODO: where to put such classes ?
-from .utils.scan import Scan
-from .bellatrix_table import BellatrixTable
+from bellastore.utils.scan import Scan
+from .base_table import BaseTable
 
-class StorageTable(BellatrixTable):
+class StorageTable(BaseTable):
     def __init__(self):
         super().__init__()
     

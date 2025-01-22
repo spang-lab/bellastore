@@ -1,5 +1,6 @@
 import os
 import pytest
+import sqlite3
     
 
 
@@ -38,6 +39,31 @@ def filesystem(tmp_path_factory):
     scan_2_path = os.path.join(scan_2_dir, "test_scan_2.ndpi")
     open(scan_2_path, 'w').close()
     yield root_dir
+
+# @pytest.fixture
+# def db_connection(filesystem):
+#     conn = sqlite3.connect(os.path.join(filesystem,"scans.sqlite"))
+#     conn.execute("PRAGMA foreign_keys = ON")
+#     yield conn
+#     conn.close()
+
+def execute_sql(path: str, query: str, params: tuple = ()) -> list:
+    """Helper function to execute SQL queries."""
+    db_connection = sqlite3.connect(path)
+    cursor = db_connection.cursor()
+    cursor.execute(query, params)
+    db_connection.commit()
+    return cursor.fetchall()
+
+def get_tables(path: str):
+    tables = execute_sql(path, "SELECT name FROM sqlite_master WHERE type='table';")
+    tables = [table[0] for table in tables]
+    return tables
+
+def get_scheme(path: str, table: str):
+    scheme = execute_sql(path, f"PRAGMA table_info({table});")
+    return scheme
+
 
 
 

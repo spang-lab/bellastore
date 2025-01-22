@@ -77,7 +77,7 @@ def create_storage_table(sqlite_path):
         # Create the "storage" table
         cursor.execute('''
         CREATE TABLE storage (
-            hash TEXT UNIQUE,
+            hash TEXT NOT NULL PRIMARY KEY,
             filepath TEXT,
             filename TEXT,
             FOREIGN KEY(hash) REFERENCES ingress(hash)
@@ -99,7 +99,7 @@ def create_myc_table(sqlite_path):
         # Create the "myc" table
         cursor.execute('''
         CREATE TABLE myc (
-            hash TEXT UNIQUE,
+            hash TEXT NOT NULL PRIMARY KEY,
             value TEXT,
             FOREIGN KEY(hash) REFERENCES storage(hash)
         )
@@ -119,7 +119,7 @@ def create_diagnosis_table(sqlite_path):
         # Create the "diagnosis" table
         cursor.execute('''
         CREATE TABLE diagnosis (
-            hash TEXT UNIQUE,
+            hash TEXT NOT NULL PRIMARY KEY,
             value TEXT,
             FOREIGN KEY(hash) REFERENCES storage(hash)
         )
@@ -139,7 +139,7 @@ def create_survival_table(sqlite_path):
         # Create the "survival" table
         cursor.execute('''
         CREATE TABLE survival (
-            hash TEXT UNIQUE,
+            hash TEXT NOT NULL PRIMARY KEY,
             value TEXT,
             FOREIGN KEY(hash) REFERENCES storage(hash)
         )
@@ -160,7 +160,7 @@ def create_stain_table(sqlite_path):
         # Create the "stain" table
         cursor.execute('''
         CREATE TABLE stain (
-            hash TEXT UNIQUE,
+            hash TEXT NOT NULL PRIMARY KEY,
             value TEXT,
             FOREIGN KEY(hash) REFERENCES storage(hash)
         )
@@ -180,7 +180,7 @@ def create_patient_table(sqlite_path):
         # Create the "stain" table
         cursor.execute('''
         CREATE TABLE patient (
-            hash TEXT UNIQUE,
+            hash TEXT NOT NULL PRIMARY KEY,
             value TEXT,
             FOREIGN KEY(hash) REFERENCES storage(hash)
         )

@@ -43,28 +43,24 @@ class ScanDatabase():
     def __init__(self, path : str, update_database = False):
         self.path = path
         self.writeable = False
+        self.sqlite_path = None
         # This really is the intended behaviour, for creating the storage you should really avoid any typos
         if not os.path.exists(self.path):
             raise ValueError("Given path does not exist. Make sure it exists first or that there are no typos!")
         
-        self.sqlite_path = os.path.join(path, "scans.sqlite")
-        if not os.path.exists(self.sqlite_path):
-            print(f"`scans.sqlite` does not exist. Creating it.")
-        self.create_database()
+        sqlite_path = os.path.join(path, "scans.sqlite")
+        try:
+            check_tables(sqlite_path)
+            self.sqlite_path = os.path.join(path, "scans.sqlite")
+            self.writeable = True
+        except Exception as e:
+            raise RuntimeError(e)
 
-        # Update sqlite for possibly existing slides, then check the database integrity
-        if update_database:
-            self.update_for_existing_slides()
-            if not self.check_storage_integrity(check_sqlite = True, verbose = True):
-                raise ValueError(f"Could not match current storage to sqlite.")
-
-    def create_database(self) -> None:
-        """
-        Creates the `scans.sqlite` file for the given folder including all tables.
-        Handles case of existing databse.
-        """
-        self.writeable = True
-        check_tables(self.sqlite_path)
+        # # Update sqlite for possibly existing slides, then check the database integrity
+        # if update_database:
+        #     self.update_for_existing_slides()
+        #     if not self.check_storage_integrity(check_sqlite = True, verbose = True):
+        #         raise ValueError(f"Could not match current storage to sqlite.")
 
     
     def open(self):
