@@ -9,11 +9,10 @@ from bellastore.utils.scan import Scan
 from .base_table import BaseTable
 
 class StorageTable(BaseTable):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, sqlite_path):
+        super().__init__(sqlite_path, 'storage')
     
-    @classmethod
-    def write(self, sqlite_path: str, storage_path: str, scans_to_write : List[Scan], verbose : bool = False) -> List[Scan]:
+    def write(self, storage_path: str, scans_to_write : List[Scan], verbose : bool = False) -> List[Scan]:
         """
         This **only writes** and **does not move** a list of slides to the storage table.
         To be used with much care as wrong usage will end up
@@ -46,9 +45,9 @@ class StorageTable(BaseTable):
         unique_scans = list(unique_scans_dict.values())
 
         # Get existing hashes from the storage table
-        conn = sqlite3.connect(sqlite_path)
+        conn = sqlite3.connect(self.sqlite_path)
         cursor = conn.cursor()
-        cursor.execute("SELECT hash FROM storage")
+        cursor.execute(f"SELECT hash FROM {self.name}")
         existing_hashes = set([row[0] for row in cursor.fetchall()])
 
         # Prepare the list of scans that need to be inserted (filter out existing ones)
@@ -59,10 +58,12 @@ class StorageTable(BaseTable):
             # as these slides will be moved 
             # TODO: check with Lukas if this is correct
             # caution the path will be changed after moving so we need to give the final path here
-            cursor.execute("""
-                INSERT INTO storage (hash, filepath, filename) 
-                VALUES (?, ?, ?)
-            """, (scan.hash, _j(storage_path, scan.hash), scan.scanname))
+            cursor.execute(f"""
+                INSERT INTO {self.name} (hash, filepath, filename, scanname) 
+                VALUES (?, ?, ?, ?)
+            """, (scan.hash, scan.path, scan.filename, scan.scanname))
+            # in order to have the state storage_db
+            scan.state.move_forward()
 
         conn.commit()
 

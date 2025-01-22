@@ -80,6 +80,7 @@ def create_storage_table(sqlite_path):
             hash TEXT NOT NULL PRIMARY KEY,
             filepath TEXT,
             filename TEXT,
+            scanname TEXT,
             FOREIGN KEY(hash) REFERENCES ingress(hash)
         )
         ''')

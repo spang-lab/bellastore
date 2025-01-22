@@ -6,23 +6,26 @@ from typing import Generator
 
 from bellastore.utils.scan import Scan
 from bellastore.database.database import ScanDatabase
+from bellastore.database.ingress import IngressTable
+from bellastore.filesystem.storage import Storage
     
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def ndpi_scan(tmp_path_factory):
     '''Create empty ndpi scan called test_scan_ndpi and returns its path'''
     tmp_file_path = _j(tmp_path_factory.mktemp("data"),"test_scan.ndpi")
     open(tmp_file_path, 'w').close()
     yield tmp_file_path
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def txt_scan(tmp_path_factory):
     '''Create empty (invalid) txt scan called test_scan_ndpi and returns its path'''
     tmp_file_path = _j(tmp_path_factory.mktemp("data"),"test_scan.txt")
     open(tmp_file_path, 'w').close()
+    yield tmp_file_path
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def root_dir(tmp_path_factory):
     root_dir = tmp_path_factory.mktemp("root")
     yield root_dir
@@ -62,12 +65,12 @@ class IngressFs:
             f.close
         self.files = {self.scan_1_path, self.scan_2_path}
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def ingress_fs(root_dir):
     ingress_fs = IngressFs(root_dir)
     yield ingress_fs
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def hashed_scans(ingress_fs):
     scan_1 = Scan(ingress_fs.scan_1_path)
     scan_1.state.move_forward()
@@ -112,12 +115,12 @@ class StorageFs:
             f.close
         self.files = {self.scan_1_path, self.scan_2_path}
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def storage_fs(root_dir):
     storage_fs = StorageFs(root_dir)
     yield storage_fs
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def storage_scans(storage_fs):
     scan_1 = Scan(storage_fs.scan_1_path)
     scan_1.state.move_forward()
@@ -132,10 +135,23 @@ def storage_scans(storage_fs):
     scan_2.state.move_forward()
     return [scan_1, scan_2]
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def empty_scan_db(root_dir):
     scan_db = ScanDatabase(root_dir)
     yield scan_db
+
+@pytest.fixture(scope="function")
+def ingress_scan_db(root_dir, ingress_fs):
+    ingress_db = ScanDatabase(root_dir)
+    ingress_table = IngressTable(ingress_db.sqlite_path)
+    ingress_table.write(ingress_fs.files)
+    yield ingress_db
+
+@pytest.fixture(scope="function")
+def storage_from_storage_fs(storage_fs):
+    yield Storage(storage_fs.storage_dir)
+
+
 
 
 def execute_sql(path: str, query: str, params: tuple = ()) -> list:

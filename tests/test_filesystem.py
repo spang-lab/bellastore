@@ -23,9 +23,12 @@ def test_ingress_get_files(ingress_fs):
 def test_storage_insert_files(ingress_fs, hashed_scans):
     storage = Storage(ingress_fs.storage_dir)
     # move slides from ingress to storage
-    storage.insert_files(hashed_scans)
+    moved_scans = storage.insert_files(hashed_scans)
     # test wether each scan is sucessfully moved to storage
     for scan in hashed_scans:
+        assert scan.path == _j(ingress_fs.storage_dir, scan.hash, scan.filename)
+        assert scan.state.get_state() == 'storage'
+    for scan in moved_scans:
         assert scan.path == _j(ingress_fs.storage_dir, scan.hash, scan.filename)
         assert scan.state.get_state() == 'storage'
 
