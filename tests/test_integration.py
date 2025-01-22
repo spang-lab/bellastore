@@ -47,7 +47,7 @@ def blueprint_integration(fs):
 
     ingress_hashes = {ingress_entry[0] for ingress_entry in ingress_entries}
     storage_hashes = {storage_entry[0] for storage_entry in storage_entries}
-    assert storage_hashes.issubset(ingress_hashes)
+    assert ingress_hashes.issubset(storage_hashes)
 
     ingress_paths = {Path(ingress_entry[1]) for ingress_entry in ingress_entries}
     for p in ingress_paths:
@@ -66,9 +66,12 @@ def test_ingress_integration(ingress_fs):
     blueprint_integration(ingress_fs)
 
 # Weird case where we have non hashed slides in storage
-# TODO: the storage folders need to be also recorded in ingress
 def test_ingress_integration(storage_fs):
     blueprint_integration(storage_fs)
+
+# TODO: Combination of both
+
+# TODO: running pipeline twice with new ingress in second round
 
 
 
