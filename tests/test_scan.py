@@ -1,22 +1,41 @@
 import pytest
+import os
 from os.path import join as _j
+from pathlib import Path
 from bellastore.utils.scan import Scan
 
 
 # Create empty scanner files
-@pytest.fixture(scope="function")
-def ndpi_scan_path(tmp_path_factory):
-    '''Create empty (invalid) txt scan called test_scan_ndpi and returns its path'''
-    tmp_file_path = _j(tmp_path_factory.mktemp("data"),"test_scan.ndpi")
-    open(tmp_file_path, 'w').close()
-    yield tmp_file_path
+def create_scan_file(dir, filename: str):
+    path = _j(dir, filename)
+    open(path, 'w').close()
+    return path
+
+def get_all_files(dir):
+    files = Path(dir).rglob("*")
+    file_paths = list(files)
+    return file_paths
 
 @pytest.fixture(scope="function")
-def txt_scan_path(tmp_path_factory):
-    '''Create empty (invalid) txt scan called test_scan_ndpi and returns its path'''
-    tmp_file_path = _j(tmp_path_factory.mktemp("data"),"test_scan.txt")
-    open(tmp_file_path, 'w').close()
-    yield tmp_file_path
+def ndpi_scan_path(root_dir):
+    return create_scan_file(root_dir, 'test_scan.ndpi')
+
+@pytest.fixture(scope="function")
+def txt_scan_path(root_dir):
+    return create_scan_file(root_dir, 'test_scan.txt')
+
+@pytest.fixture(scope="function")
+def ndpi_scan(root_dir):
+        p = create_scan_file(root_dir, 'test_scan.ndpi')
+        return Scan(str(p))
+
+@pytest.fixture(scope="function")
+def target_dir(root_dir):
+    sub = root_dir / "sub"
+    sub.mkdir()
+    return sub
+     
+
 
 
 # --------------- #
@@ -44,3 +63,7 @@ def test_hashing(ndpi_scan_path):
     hash = scan.hash_scan()
     print(hash)
     assert hash
+
+def test_move_scan(ndpi_scan, target_dir):
+    ndpi_scan.move_scan(target_dir)
+    assert [Path(ndpi_scan.path)] == get_all_files(target_dir)

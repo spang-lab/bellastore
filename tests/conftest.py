@@ -29,11 +29,47 @@ def scans(tmp_path):
 
 # The idea here is to set up filesystems with different layout, e.g. where the slides are located
 
-
+# everything starts at a temporary root
 @pytest.fixture(scope="function")
 def root_dir(tmp_path_factory):
     root_dir = tmp_path_factory.mktemp("root")
     yield root_dir
+
+# class Fs:
+#     def __init__(self, root_dir):
+#         self.root_dir = root_dir
+#         self.storage_dir = _j(root_dir, "storage")
+#         self.ingress_dir = _j(root_dir, "ingress")
+
+#     def __add_scan(scan, target_dir):
+
+    
+#     def add_scan_to_ingress():
+    
+#     def add_scan_to_storage():
+#         self.scan_1_dir = _j(self.ingress_dir, "scan_1")
+#         self.scan_2_dir = _j(self.ingress_dir, "scan_2")
+#         # Define directory structure
+#         dirs = [
+#             self.storage_dir,
+#             self.ingress_dir,
+#             self.scan_1_dir,
+#             self.scan_2_dir
+#         ]
+#         # Create all directories
+#         for dir_path in dirs:
+#             os.makedirs(dir_path, exist_ok=True)
+        
+#         # Create 2 DIFFERENT scans
+#         self.scan_1_path = _j(self.scan_1_dir, "test_scan_1.ndpi")
+#         with open(self.scan_1_path, 'w') as f:
+#             f.write('test_scan_1.ndpi')
+#             f.close
+#         self.scan_2_path = _j(self.scan_2_dir, "test_scan_2.ndpi")
+#         with open(self.scan_2_path, 'w') as f:
+#             f.write('test_scan_2.ndpi')
+#             f.close
+#         self.files = {self.scan_1_path, self.scan_2_path}   
 
 
 class IngressFs:

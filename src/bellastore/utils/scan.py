@@ -50,6 +50,14 @@ class Scan():
         """
         return os.path.splitext(os.path.basename(path))[0]
     
+    def move_scan(self, target_dir):
+        try:
+            self.path = shutil.move(self.path, target_dir)
+            print(f"Successfully moved {self.path} into directory {target_dir}")
+        except Exception as e:
+            raise RuntimeError(f"File can not be moved from {self.path} into directory {target_dir} due to: {e}")
+
+    
     def get_filename(self, path : str) -> str:
         """
         Returns the filename without the extension of a given path.
