@@ -24,14 +24,14 @@ def blueprint_integration(fs):
 
     # Step 4: Move ingress files to storage
     storage = Storage(fs.storage_dir)
-    moved_scans = storage.insert_files(ingress_scans)
+    moved_scans = storage.insert_many(ingress_scans)
 
     # Step 5: Get the storage scans
     storage_scans = storage.get_existing_slides(scan_db.sqlite_path)
 
     # Step 6: Write the storage scans to the storage table
     storage_table = StorageTable(scan_db.sqlite_path)
-    storage_table.write(fs.storage_dir, storage_scans)
+    storage_table.write_candidate_scans(storage_scans)
 
     # ACTUAL TESTING
 

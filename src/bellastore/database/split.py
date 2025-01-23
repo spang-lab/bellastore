@@ -1,1 +1,0 @@
-# This module is designed to interact with the split table

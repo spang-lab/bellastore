@@ -10,7 +10,36 @@ class IngressTable(BaseTable):
     def __init__(self, sqlite_path):
         super().__init__(sqlite_path, 'ingress')
 
-    def write(self, considered_scans: List[str], verbose: bool = False) -> List[Scan]:
+    def write(self, scan: Scan):
+        conn = sqlite3.connect(self.sqlite_path)
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                f"INSERT INTO {self.name} (hash, filepath, filename) VALUES (?, ?, ?)",
+                (scan.hash, scan.path, scan.scanname)
+            )
+        except sqlite3.IntegrityError as e:
+                print(f"Failed to insert scan {scan.path}: {e}")
+        conn.commit()
+        conn.close()
+        # TODO: here no update of state?
+    
+    def write_many(self, scans: List[Scan]):
+        conn = sqlite3.connect(self.sqlite_path)
+        cursor = conn.cursor()
+        for scan in scans:
+            try:
+                cursor.execute(
+                    f"INSERT INTO {self.name} (hash, filepath, filename) VALUES (?, ?, ?)",
+                    (scan.hash, scan.path, scan.scanname)
+                )
+            except sqlite3.IntegrityError as e:
+                    print(f"Failed to insert scan {scan.path}: {e}")
+        conn.commit()       
+        conn.close() 
+    
+
+    def write_candidate_scans(self, considered_scans: List[str], verbose: bool = False) -> List[Scan]:
             """
             Writes a list of paths of scanner files and their hashes to the ingress table.
             Non-valid and already existing scans (with the same name and ingress path) will be removed from the list.
@@ -42,6 +71,7 @@ class IngressTable(BaseTable):
                         if verbose:
                             print(f"Got empty hash from file {scan.path}")
                 elif verbose:
+                    # TODO: scan is not actually removed
                     print(f"Invalid scan removed: {scan.path}")
 
             with ThreadPoolExecutor() as executor:
@@ -49,13 +79,10 @@ class IngressTable(BaseTable):
 
             # Open the database connection and call `INSERT OR IGNORE`
             print(f"Writing hashes to sqlite.")
-            conn = sqlite3.connect(self.sqlite_path)
-            cursor = conn.cursor()
 
             # First get entries from ingress and check against to be inserted to avoid duplicates
             # Select existing entries based on hash, filepath, and filename
-            cursor.execute(f"SELECT hash, filepath, filename FROM {self.name}")
-            existing_entries = set(cursor.fetchall())
+            existing_entries = set(self.read_all_of_columns(['hash', 'filepath', 'filename']))
 
             # Filter out scans that already exist in the ingress table
             # They really do match even though one is received from the sqlite and the other is
@@ -66,18 +93,8 @@ class IngressTable(BaseTable):
             ]
 
             # Write the non-duplicates to the ingress table
-            for scan in valid_scans:
-                try:
-                    cursor.execute(
-                        f"INSERT INTO {self.name} (hash, filepath, filename) VALUES (?, ?, ?)",
-                        (scan.hash, scan.path, scan.scanname)
-                    )
-                except sqlite3.IntegrityError as e:
-                    if verbose:
-                        print(f"Failed to insert scan {scan.path}: {e}")
+            self.write_many(valid_scans)
 
-            conn.commit()
-            conn.close()
 
             # Update the scans, that have been noted in the ingress table, to have the state "hashed"
             for scan in valid_scans:

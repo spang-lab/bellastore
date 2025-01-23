@@ -7,73 +7,30 @@ import sqlite3
 from concurrent.futures import ThreadPoolExecutor
 
 from bellastore.utils.scan import Scan
+from bellastore.filesystem.base_folder import BaseFolder
 from .constants import scan_extensions_glob, scan_extensions
 
-class Storage():
+class Storage(BaseFolder):
     def __init__(self, path):
-        self.path = path
-        # TODO: I would set that up independently of the app
-        # os.makedirs(path, exist_ok=True)
+        super().__init__(path)
+    
+    def insert(self, scan: Scan):
+        if scan.hash: # This condition is just for correct typing as theoretically `hash` is also allowed to be `None` (but which it can't be at this point)
+            target_folder = os.path.join(self.path, scan.hash)
+            os.makedirs(target_folder, exist_ok = False) # If the folder already exists we are in big problems - it should have been filtered out by then...
 
-    def insert_files(self, scans_to_move: List[Scan]) -> List[Scan]:
-        """
-        Moves a list of scans to the storage folder.
-        
-        Args:
-            scans_to_move (List[Scan]): list of scans with state "hashed"
-            
-        Returns:
-            moved_scans (List[Scan]): list containing only the scans that have been successfully moved to the storage folder
-        """
-        def __move_slide(slide_path: str, target_folder: str, verbose = False) -> None:
-            """
-            Moves (not copies!) a slide to the target folder.
-            A 'slide' might be a simple file or a whole `mrxs` folder.
-            
-            Args:
-                slide_path (str): path to the slide file
-                target_folder (str): folder where the slide should be moved to
-                verbose (bool, default = False): prints moved folders and directories out
-            """
-            is_mrxs = slide_path.endswith(".mrxs")
-            
-            # Move the slide file itself (for non-`.mrxs` cases, this is enough)
-            if verbose:
-                print(f"Moving {slide_path} to {target_folder}")
-            # TODO: Lukas check if this makes sense also for mxrs
-            dest = shutil.move(slide_path, target_folder)
-            p = Path(slide_path)
-            Path.rmdir(p.parents[0])
-
-
-            # If it's an `.mrxs` file, we need to also move the directory too (has same name)
-            if is_mrxs:
-                (mrxs_folder, _) = os.path.splitext(slide_path)
-                folder_name = os.path.basename(mrxs_folder)
-                target = os.path.join(target_folder, folder_name) 
-
-                if verbose:
-                    print(f"Moving {mrxs_folder} to {target}")
-                dest = shutil.move(mrxs_folder, target) 
-                p = Path(mrxs_folder)
-                Path.rmdir(p)
-            return dest
-
-        # Generate folders with name being `scan.hash` and move the scans into there
-        for scan in scans_to_move:
-            if scan.hash: # This condition is just for correct typing as theoretically `hash` is also allowed to be `None` (but which it can't be at this point)
-                target_folder = os.path.join(self.path, scan.hash)
-                os.makedirs(target_folder, exist_ok = False) # If the folder already exists we are in big problems - it should have been filtered out by then...
-
-                # Move the slide to the storage folder (`.mrxs` is handled automatically)
-                new_scan_path = __move_slide(scan.path, target_folder)
-                # of course we also need to adjust the scan path after moving
-                scan.path = new_scan_path
-
-            # Moce the scan to the last state
+            # Move the slide to the storage folder (`.mrxs` is handled automatically)
+            new_scan_path = self.move_file(scan.path, target_folder)
+            # of course we also need to adjust the scan path after moving
+            scan.path = new_scan_path
             scan.state.move_forward()
+        else:
+            raise RuntimeError("Error with state machine, scan is not hashed.")
 
-        return scans_to_move
+    def insert_many(self, scans: List[Scan]) -> List[Scan]:
+        for scan in scans:
+            self.insert(scan)
+        return scans
     
     def check_storage_integrity(self, sqlite_path: str, check_sqlite = False, verbose = True) -> bool:
         """
