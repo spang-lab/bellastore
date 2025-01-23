@@ -9,6 +9,8 @@ from bellastore.database.storage import StorageTable
 from bellastore.filesystem.ingress import Ingress
 from bellastore.filesystem.storage import Storage
 
+from bellastore.database.db import Db
+
 # This is the main integration test
 def blueprint_integration(fs):
     # Step 1: Initialize empty db
@@ -69,6 +71,11 @@ def test_ingress_integration(ingress_fs):
 def test_ingress_integration(storage_fs):
     blueprint_integration(storage_fs)
 
+def test_insert(root_dir, scans, duplicate_scans):
+    db = Db(root_dir, 'scans.sqlite')
+    db.insert(scans[0])
+    db.insert(duplicate_scans[0])
+    print(str(db))
 # TODO: Combination of both
 
 # TODO: running pipeline twice with new ingress in second round

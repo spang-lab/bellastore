@@ -26,6 +26,14 @@ def create_scans(path: Path, amount = 4) -> List[Scan]:
 
 @pytest.fixture(scope="function")
 def scans(tmp_path):
+    tmp_path = tmp_path / "scans_1"
+    os.mkdir(tmp_path)
+    yield create_scans(tmp_path, 4)
+
+@pytest.fixture(scope="function")
+def duplicate_scans(tmp_path):
+    tmp_path = tmp_path / "scans_2"
+    os.mkdir(tmp_path)
     yield create_scans(tmp_path, 4)
 
 # FILESYSTEMS

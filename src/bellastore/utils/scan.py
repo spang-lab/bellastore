@@ -122,8 +122,6 @@ class Scan():
             raw_hash = hash_file(self.path)
             hash = base64.urlsafe_b64encode(raw_hash).decode("utf-8")
             self.hash = hash
-            # TODO:
-            # self.state.move_forward()
             return base64.urlsafe_b64encode(raw_hash).decode("utf-8")
 
         # For `.mrxs` files check if they are structured correctly
@@ -144,8 +142,6 @@ class Scan():
         # we actually hash the scan
         hash = base64.urlsafe_b64encode(hash.digest()).decode("utf-8")
         self.hash = hash
-        # TODO:
-        # self.state.move_forward()
         return hash
 
 

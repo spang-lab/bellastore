@@ -32,9 +32,11 @@ class Fs:
     def _add_scan_to_ingress(self, scan: Scan):
         # Moving to ingress means hashing
         scan.hash_scan()
+        # TODO: is this intuitive
+        # adding to ingress will give state hashed
         scan.move(self.ingress_dir)
     def add_scan_to_storage(self, scan: Scan):
-        self.add_scan_to_ingress(scan)
+        # self._add_scan_to_ingress(scan)
         target_dir = os.path.join(self.storage_dir, scan.hash)
         scan.move(target_dir)
     def _add_scans_to_ingress(self, scans: List[Scan]):
