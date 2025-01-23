@@ -2,11 +2,23 @@ import pytest
 import sqlite3
 import os
 from os.path import join as _j
+from pathlib import Path
 
 from conftest import execute_sql, get_tables, get_scheme
 from bellastore.database.database import ScanDatabase
 from bellastore.filesystem.storage import Storage
 from bellastore.filesystem.ingress import Ingress
+
+from conftest import Fs
+
+
+def test_filesystem(test_fs: Fs):
+    # files = Path(test_fs.storage_dir).rglob("*")
+    # file_paths = list(files)
+    # file_paths = [str(file_path) for file_path in file_paths]
+    # print(file_paths)
+    print(test_fs.get_files_from_ingress())
+    print(test_fs.get_files_from_storage())
 
 def test_scan_integrity(hashed_scans):
     for scan in hashed_scans:

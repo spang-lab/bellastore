@@ -51,6 +51,8 @@ class BaseFolder():
         if verbose:
             print(f"Moving {file_path} to {target_folder}")
         # TODO: Lukas check if this makes sense also for mxrs
+        # TODO: this must work
+        os.makedirs(target_folder, exist_ok = True)
         dest = shutil.move(file_path, target_folder)
         # important: shutil does not delete the src dir
         p = Path(file_path)
@@ -65,6 +67,7 @@ class BaseFolder():
 
             if verbose:
                 print(f"Moving {mrxs_folder} to {target}")
+            os.makedirs(target, exist_ok = True)
             dest = shutil.move(mrxs_folder, target) 
             p = Path(mrxs_folder)
             Path.rmdir(p)

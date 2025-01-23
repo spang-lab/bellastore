@@ -12,13 +12,15 @@ from bellastore.database.storage import StorageTable
 from bellastore.filesystem.storage import Storage
     
 
-# CREATING SCANS FOR FURTHER USE
+# CREATING SCANS TO BE PUT INTO OUR FILESYSTE
 def create_scans(path: Path, amount = 4) -> List[Scan]:
     scans = []
     for i in range(amount):
         p = path / f"scan_{i}.ndpi"
         p.write_text(f"Content of scan_{i}.ndpi", encoding="utf-8")
-        scans.append(Scan(str(p)))
+        scan = Scan(str(p))
+        scan.state.move_forward()
+        scans.append(scan)
     return scans
 
 @pytest.fixture(scope="function")
@@ -26,7 +28,6 @@ def scans(tmp_path):
     yield create_scans(tmp_path, 4)
 
 # FILESYSTEMS
-
 # The idea here is to set up filesystems with different layout, e.g. where the slides are located
 
 # everything starts at a temporary root
@@ -35,41 +36,76 @@ def root_dir(tmp_path_factory):
     root_dir = tmp_path_factory.mktemp("root")
     yield root_dir
 
-# class Fs:
-#     def __init__(self, root_dir):
-#         self.root_dir = root_dir
-#         self.storage_dir = _j(root_dir, "storage")
-#         self.ingress_dir = _j(root_dir, "ingress")
+class Fs:
+    def __init__(self, root_dir):
+        '''
+        A Fs only contains a storage and an ingress (and of course a root)
+        '''
+        self.root_dir = root_dir
+        self.storage_dir = _j(root_dir, "storage")
+        os.makedirs(self.storage_dir, exist_ok = True)
+        self.ingress_dir = _j(root_dir, "ingress")
+        os.makedirs(self.ingress_dir, exist_ok = True)
 
-#     def __add_scan(scan, target_dir):
+    @staticmethod
+    def _get_files(dir):
+        files = Path(dir).rglob("*")
+        file_paths = list(files)
+        file_paths = [str(file) for file in file_paths if file.is_file()]
+        return file_paths
 
     
-#     def add_scan_to_ingress():
+    def add_scan_to_ingress(self, scan: Scan):
+        scan.move(self.ingress_dir)
+    def add_scan_to_storage(self, scan: Scan):
+        # Here it is more intrigued, because we need to hash first
+        scan.hash_scan()
+        target_dir = os.path.join(self.storage_dir, scan.hash)
+        scan.move(target_dir)
+    def add_scans_to_ingress(self, scans: List[Scan]):
+        for scan in scans:
+            self.add_scan_to_ingress(scan)
+    def add_scans_to_storage(self, scans: List[Scan]):
+        for scan in scans:
+            self.add_scan_to_storage(scan)
     
-#     def add_scan_to_storage():
-#         self.scan_1_dir = _j(self.ingress_dir, "scan_1")
-#         self.scan_2_dir = _j(self.ingress_dir, "scan_2")
-#         # Define directory structure
-#         dirs = [
-#             self.storage_dir,
-#             self.ingress_dir,
-#             self.scan_1_dir,
-#             self.scan_2_dir
-#         ]
-#         # Create all directories
-#         for dir_path in dirs:
-#             os.makedirs(dir_path, exist_ok=True)
+    def get_files_from_ingress(self):
+        print(f"The files in {self.ingress_dir} are")
+        return self._get_files(self.ingress_dir)
+    def get_files_from_storage(self):
+        print(f"The files in {self.storage_dir} are")
+        return self._get_files(self.storage_dir)
         
-#         # Create 2 DIFFERENT scans
-#         self.scan_1_path = _j(self.scan_1_dir, "test_scan_1.ndpi")
-#         with open(self.scan_1_path, 'w') as f:
-#             f.write('test_scan_1.ndpi')
-#             f.close
-#         self.scan_2_path = _j(self.scan_2_dir, "test_scan_2.ndpi")
-#         with open(self.scan_2_path, 'w') as f:
-#             f.write('test_scan_2.ndpi')
-#             f.close
-#         self.files = {self.scan_1_path, self.scan_2_path}   
+    # def add_scan_to_storage():
+    #     self.scan_1_dir = _j(self.ingress_dir, "scan_1")
+    #     self.scan_2_dir = _j(self.ingress_dir, "scan_2")
+    #     # Define directory structure
+    #     dirs = [
+    #         self.storage_dir,
+    #         self.ingress_dir,
+    #         self.scan_1_dir,
+    #         self.scan_2_dir
+    #     ]
+    #     # Create all directories
+    #     for dir_path in dirs:
+    #         os.makedirs(dir_path, exist_ok=True)
+        
+    #     # Create 2 DIFFERENT scans
+    #     self.scan_1_path = _j(self.scan_1_dir, "test_scan_1.ndpi")
+    #     with open(self.scan_1_path, 'w') as f:
+    #         f.write('test_scan_1.ndpi')
+    #         f.close
+    #     self.scan_2_path = _j(self.scan_2_dir, "test_scan_2.ndpi")
+    #     with open(self.scan_2_path, 'w') as f:
+    #         f.write('test_scan_2.ndpi')
+    #         f.close
+    #     self.files = {self.scan_1_path, self.scan_2_path}
+
+@pytest.fixture(scope="function")
+def test_fs(root_dir, scans):
+    test_fs = Fs(root_dir)
+    test_fs.add_scans_to_storage(scans)
+    return test_fs
 
 
 class IngressFs:

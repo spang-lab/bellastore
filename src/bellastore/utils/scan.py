@@ -50,12 +50,15 @@ class Scan():
         """
         return os.path.splitext(os.path.basename(path))[0]
     
-    def move_scan(self, target_dir):
+    def move(self, target_dir):
         try:
-            self.path = shutil.move(self.path, target_dir)
-            print(f"Successfully moved {self.path} into directory {target_dir}")
+            source_path = self.path
+            os.makedirs(target_dir, exist_ok = True)
+            shutil.move(self.path, target_dir)
+            self.path = os.path.join(target_dir, self.filename)
+            print(f"Successfully moved {source_path} into {self.path}")
         except Exception as e:
-            raise RuntimeError(f"File can not be moved from {self.path} into directory {target_dir} due to: {e}")
+            raise RuntimeError(f"File can not be moved from {self.path} into {self.path} due to: {e}")
 
     
     def get_filename(self, path : str) -> str:
@@ -112,11 +115,15 @@ class Scan():
         if not self.state.has_state("valid"):
             print(f"Slide does not (yet) have the state 'valid' (current: {self.state.get_state()}).")
             return None
-
+    # TODO: these cases are a bit confusing
         # Simple hasing for normal files
         is_mrxs = self.path.endswith(".mrxs")
         if not is_mrxs:
             raw_hash = hash_file(self.path)
+            hash = base64.urlsafe_b64encode(raw_hash).decode("utf-8")
+            self.hash = hash
+            # TODO:
+            # self.state.move_forward()
             return base64.urlsafe_b64encode(raw_hash).decode("utf-8")
 
         # For `.mrxs` files check if they are structured correctly
@@ -133,7 +140,13 @@ class Scan():
                 raw_hash = hash_file(file_path)
                 hash.update(raw_hash)
         hash.update(hash_file(self.path))
-        return base64.urlsafe_b64encode(hash.digest()).decode("utf-8")
+        # TODO:
+        # we actually hash the scan
+        hash = base64.urlsafe_b64encode(hash.digest()).decode("utf-8")
+        self.hash = hash
+        # TODO:
+        # self.state.move_forward()
+        return hash
 
 
 
