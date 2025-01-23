@@ -229,53 +229,9 @@ def classic_db(root_dir, scans):
 
 
 
-    
-     
-
-    
-
-# # Here we set up databases at different stages in the storage process, e.g.
-# # empty or already filled with some scans
-# @pytest.fixture(scope="function")
-# def empty_scan_db(root_dir):
-#     '''
-#     Just an empty scan database
-#     '''
-#     scan_db = ScanDatabase(root_dir)
-#     yield scan_db
-
-# @pytest.fixture(scope="function")
-# def ingress_scan_db(root_dir, ingress_fs):
-#     '''
-#     A database that has the files from ingress already in its ingress table, but
-#     neither in the storage db nor in storage
-#     '''
-#     ingress_db = ScanDatabase(root_dir)
-#     ingress_table = IngressTable(ingress_db.sqlite_path)
-#     ingress_table.write(ingress_fs.files)
-#     yield ingress_db
-
-# @pytest.fixture(scope="function")
-# def storage_scan_db(storage_fs, hashed_scans, storage_scans):
-#     '''
-#     A database that is already filled with 2 scans (in ingress and storage table)
-#     '''
-#     scan_db = ScanDatabase(storage_fs.root_dir)
-#     ingress_table = IngressTable(scan_db.sqlite_path)
-#     ingress_table.write_many(hashed_scans)
-#     storage_table = StorageTable(scan_db.sqlite_path)
-#     # here it curcial to give the storage scans the correct path, becuase they are in a non-hashed folder
-#     for scan in storage_scans:
-#         scan.path = os.path.join(storage_fs.storage_dir, scan.hash, scan.filename)
-#     storage_table.write_many(storage_scans)
-#     yield scan_db
-
-
-
-
 
 # HELPERS
-
+# TODO: this we can write elegantly with the decorator
 def execute_sql(path: str, query: str, params: tuple = ()) -> list:
     """Helper function to execute SQL queries."""
     db_connection = sqlite3.connect(path)
