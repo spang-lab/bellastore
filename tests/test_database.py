@@ -9,6 +9,18 @@ from bellastore.database.database import ScanDatabase
 from bellastore.database.ingress import IngressTable
 from bellastore.database.storage import StorageTable
 
+def test_show_empty_db(empty_db):
+    print(str(empty_db))
+
+def test_show_ingress_db(ingress_only_db):
+    print(str(ingress_only_db))
+
+def test_show_storage_db(storage_only_db):
+    print(str(storage_only_db))
+
+def test_show_classic_db(classic_db):
+    print(str(classic_db))
+
 def test_db_initialization(empty_scan_db):
     tables = get_tables(empty_scan_db.sqlite_path)
     assert not empty_scan_db.sqlite_path == None

@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 import sqlite3
 from typing import List, Dict, Tuple
+import functools
 
 from bellastore.utils.scan import Scan
 from bellastore.database.database import ScanDatabase
@@ -28,7 +29,7 @@ def scans(tmp_path):
     yield create_scans(tmp_path, 4)
 
 # FILESYSTEMS
-# The idea here is to set up filesystems with different layout, e.g. where the slides are located
+# The idea here is to set up filesystems with different layout
 
 # everything starts at a temporary root
 @pytest.fixture(scope="function")
@@ -36,10 +37,12 @@ def root_dir(tmp_path_factory):
     root_dir = tmp_path_factory.mktemp("root")
     yield root_dir
 
+# blueprint fs
 class Fs:
     def __init__(self, root_dir):
         '''
-        A Fs only contains a storage and an ingress (and of course a root)
+        A Fs only contains a storage and an ingress (and of course a root).
+        So this serves as a blueprint for all subsequent filesystems
         '''
         self.root_dir = root_dir
         self.storage_dir = _j(root_dir, "storage")
@@ -56,10 +59,11 @@ class Fs:
 
     
     def add_scan_to_ingress(self, scan: Scan):
+        # Moving to ingress means hashing
+        scan.hash_scan()
         scan.move(self.ingress_dir)
     def add_scan_to_storage(self, scan: Scan):
-        # Here it is more intrigued, because we need to hash first
-        scan.hash_scan()
+        self.add_scan_to_ingress(scan)
         target_dir = os.path.join(self.storage_dir, scan.hash)
         scan.move(target_dir)
     def add_scans_to_ingress(self, scans: List[Scan]):
@@ -75,293 +79,196 @@ class Fs:
     def get_files_from_storage(self):
         print(f"The files in {self.storage_dir} are")
         return self._get_files(self.storage_dir)
-        
-    # def add_scan_to_storage():
-    #     self.scan_1_dir = _j(self.ingress_dir, "scan_1")
-    #     self.scan_2_dir = _j(self.ingress_dir, "scan_2")
-    #     # Define directory structure
-    #     dirs = [
-    #         self.storage_dir,
-    #         self.ingress_dir,
-    #         self.scan_1_dir,
-    #         self.scan_2_dir
-    #     ]
-    #     # Create all directories
-    #     for dir_path in dirs:
-    #         os.makedirs(dir_path, exist_ok=True)
-        
-    #     # Create 2 DIFFERENT scans
-    #     self.scan_1_path = _j(self.scan_1_dir, "test_scan_1.ndpi")
-    #     with open(self.scan_1_path, 'w') as f:
-    #         f.write('test_scan_1.ndpi')
-    #         f.close
-    #     self.scan_2_path = _j(self.scan_2_dir, "test_scan_2.ndpi")
-    #     with open(self.scan_2_path, 'w') as f:
-    #         f.write('test_scan_2.ndpi')
-    #         f.close
-    #     self.files = {self.scan_1_path, self.scan_2_path}
+    
+    def __str__(self):
+        ingress = self.get_files_from_ingress()
+        storage = self.get_files_from_storage()
+        return(f"Ingress: {ingress}\n Storage: {storage}")
 
+# the filesystem layouts to be tested against
 @pytest.fixture(scope="function")
-def test_fs(root_dir, scans):
-    test_fs = Fs(root_dir)
-    test_fs.add_scans_to_storage(scans)
-    return test_fs
-
-
-class IngressFs:
+def ingress_only_fs(root_dir, scans):
     '''
-    This is a filesystem that has 2 valid scanner slides in its INGRESS,
-    and none in its storage
+    Contains all slides in ingress and none in storage
     '''
-    def __init__(self, root_dir):
-        self.root_dir = root_dir
-        self.storage_dir = _j(root_dir, "storage")
-        self.ingress_dir = _j(root_dir, "ingress")
-        self.scan_1_dir = _j(self.ingress_dir, "scan_1")
-        self.scan_2_dir = _j(self.ingress_dir, "scan_2")
-        # Define directory structure
-        dirs = [
-            self.storage_dir,
-            self.ingress_dir,
-            self.scan_1_dir,
-            self.scan_2_dir
-        ]
-        # Create all directories
-        for dir_path in dirs:
-            os.makedirs(dir_path, exist_ok=True)
-        
-        # Create 2 DIFFERENT scans
-        self.scan_1_path = _j(self.scan_1_dir, "test_scan_1.ndpi")
-        with open(self.scan_1_path, 'w') as f:
-            f.write('test_scan_1.ndpi')
-            f.close
-        self.scan_2_path = _j(self.scan_2_dir, "test_scan_2.ndpi")
-        with open(self.scan_2_path, 'w') as f:
-            f.write('test_scan_2.ndpi')
-            f.close
-        self.files = {self.scan_1_path, self.scan_2_path}
+    fs = Fs(root_dir)
+    fs.add_scans_to_ingress(scans)
+    return fs
 
 @pytest.fixture(scope="function")
-def ingress_fs(root_dir):
-    ingress_fs = IngressFs(root_dir)
-    yield ingress_fs
-
-@pytest.fixture(scope="function")
-def hashed_scans(ingress_fs):
-    scan_1 = Scan(ingress_fs.scan_1_path)
-    scan_1.state.move_forward()
-    scan_1.hash = scan_1.hash_scan()
-    scan_1.state.move_forward()
-    scan_2 = Scan(ingress_fs.scan_2_path)
-    scan_2.state.move_forward()
-    scan_2.hash = scan_2.hash_scan()
-    scan_2.state.move_forward()
-    return [scan_1, scan_2]
-
-
-class IngressFsFresh:
+def storage_only_fs(root_dir, scans):
     '''
-    This is a filesystem that has 2 valid scanner slides in its INGRESS,
-    and none in its storage
+    Contains all slides in storage and none in ingress
     '''
-    def __init__(self, root_dir):
-        self.root_dir = root_dir
-        self.storage_dir = _j(root_dir, "storage")
-        self.ingress_dir = _j(root_dir, "ingress")
-        self.scan_1_dir = _j(self.ingress_dir, "scan_3")
-        self.scan_2_dir = _j(self.ingress_dir, "scan_4")
-        # Define directory structure
-        dirs = [
-            self.storage_dir,
-            self.ingress_dir,
-            self.scan_1_dir,
-            self.scan_2_dir
-        ]
-        # Create all directories
-        for dir_path in dirs:
-            os.makedirs(dir_path, exist_ok=True)
-        
-        # Create 2 DIFFERENT scans
-        self.scan_1_path = _j(self.scan_1_dir, "test_scan_3.ndpi")
-        with open(self.scan_1_path, 'w') as f:
-            f.write('test_scan_3.ndpi')
-            f.close
-        self.scan_2_path = _j(self.scan_2_dir, "test_scan_4.ndpi")
-        with open(self.scan_2_path, 'w') as f:
-            f.write('test_scan_4.ndpi')
-            f.close
-        self.files = {self.scan_1_path, self.scan_2_path}
+    fs = Fs(root_dir)
+    fs.add_scans_to_storage(scans)
+    return fs 
 
 @pytest.fixture(scope="function")
-def ingress_fs_fresh(root_dir):
-    ingress_fs = IngressFsFresh(root_dir)
-    yield ingress_fs
-
-@pytest.fixture(scope="function")
-def hashed_scans_fresh(ingress_fs_fresh):
-    scan_1 = Scan(ingress_fs_fresh.scan_1_path)
-    scan_1.state.move_forward()
-    scan_1.hash = scan_1.hash_scan()
-    scan_1.state.move_forward()
-    scan_2 = Scan(ingress_fs_fresh.scan_2_path)
-    scan_2.state.move_forward()
-    scan_2.hash = scan_2.hash_scan()
-    scan_2.state.move_forward()
-    return [scan_1, scan_2]
-
-
-class StorageFs:
+def classic_fs(root_dir, scans):
     '''
-    This is a filesystem that has 2 valid scanner slides in its STORAGE,
-    and none in its ingress
+    Contains half the slides in ingress and half already in storage
     '''
-    def __init__(self, root_dir):
-        self.root_dir = root_dir
-        self.storage_dir = _j(root_dir, "storage")
-        self.ingress_dir = _j(root_dir, "ingress")
-        self.scan_1_dir = _j(self.storage_dir, "scan_1")
-        self.scan_2_dir = _j(self.storage_dir, "scan_2")
-        # Define directory structure
-        dirs = [
-            self.storage_dir,
-            self.ingress_dir,
-            self.scan_1_dir,
-            self.scan_2_dir
-        ]
-        # Create all directories
-        for dir_path in dirs:
-            os.makedirs(dir_path, exist_ok=True)
-        
-        # Create 2 DIFFERENT scans
-        self.scan_1_path = _j(self.scan_1_dir, "test_scan_1.ndpi")
-        with open(self.scan_1_path, 'w') as f:
-            f.write('test_scan_1.ndpi')
-            f.close
-        self.scan_2_path = _j(self.scan_2_dir, "test_scan_2.ndpi")
-        with open(self.scan_2_path, 'w') as f:
-            f.write('test_scan_2.ndpi')
-            f.close
-        self.files = {self.scan_1_path, self.scan_2_path}
-
-@pytest.fixture(scope="function")
-def storage_fs(root_dir):
-    storage_fs = StorageFs(root_dir)
-    yield storage_fs
-
-@pytest.fixture(scope="function")
-def storage_from_storage_fs(storage_fs):
-    yield Storage(storage_fs.storage_dir)
-
-@pytest.fixture(scope="function")
-def storage_scans(storage_fs):
-    scan_1 = Scan(storage_fs.scan_1_path)
-    scan_1.state.move_forward()
-    scan_1.hash = scan_1.hash_scan()
-    scan_1.state.move_forward()
-    # to be in storage
-    scan_1.state.move_forward()
-    scan_2 = Scan(storage_fs.scan_2_path)
-    scan_2.state.move_forward()
-    scan_2.hash = scan_2.hash_scan()
-    scan_2.state.move_forward()
-    scan_2.state.move_forward()
-    return [scan_1, scan_2]
-
-class StorageFsFresh:
-    '''
-    This is a filesystem that has 2 valid scanner slides in its STORAGE,
-    and none in its ingress
-    '''
-    def __init__(self, root_dir):
-        self.root_dir = root_dir
-        self.storage_dir = _j(root_dir, "storage")
-        self.ingress_dir = _j(root_dir, "ingress")
-        self.scan_1_dir = _j(self.storage_dir, "scan_3")
-        self.scan_2_dir = _j(self.storage_dir, "scan_4")
-        # Define directory structure
-        dirs = [
-            self.storage_dir,
-            self.ingress_dir,
-            self.scan_1_dir,
-            self.scan_2_dir
-        ]
-        # Create all directories
-        for dir_path in dirs:
-            os.makedirs(dir_path, exist_ok=True)
-        
-        # Create 2 DIFFERENT scans
-        self.scan_1_path = _j(self.scan_1_dir, "test_scan_3.ndpi")
-        with open(self.scan_1_path, 'w') as f:
-            f.write('test_scan_3.ndpi')
-            f.close
-        self.scan_2_path = _j(self.scan_2_dir, "test_scan_4.ndpi")
-        with open(self.scan_2_path, 'w') as f:
-            f.write('test_scan_4.ndpi')
-            f.close
-        self.files = {self.scan_1_path, self.scan_2_path}
-
-@pytest.fixture(scope="function")
-def storage_fs_fresh(root_dir):
-    storage_fs = StorageFsFresh(root_dir)
-    yield storage_fs
-
-@pytest.fixture(scope="function")
-def storage_from_storage_fs_fresh(storage_fs_fresh):
-    yield Storage(storage_fs_fresh.storage_dir)
-
-@pytest.fixture(scope="function")
-def storage_scans_fresh(storage_fs_fresh):
-    scan_1 = Scan(storage_fs_fresh.scan_1_path)
-    scan_1.state.move_forward()
-    scan_1.hash = scan_1.hash_scan()
-    scan_1.state.move_forward()
-    # to be in storage
-    scan_1.state.move_forward()
-    scan_2 = Scan(storage_fs_fresh.scan_2_path)
-    scan_2.state.move_forward()
-    scan_2.hash = scan_2.hash_scan()
-    scan_2.state.move_forward()
-    scan_2.state.move_forward()
-    return [scan_1, scan_2]
+    fs = Fs(root_dir)
+    fs.add_scans_to_ingress(scans[0:2])
+    fs.add_scans_to_storage(scans[2:4])
+    return fs 
 
 
 # DATABSES
+def sqlite_connection(func):
+    '''
+    This decorator is genious
+    '''
+    @functools.wraps(func)
+    def wrapper(self, *args, **kwargs):
+        with sqlite3.connect(self.sqlite_path) as conn:
+            cursor = conn.cursor()
+            try:
+                result = func(self, cursor, *args, **kwargs)
+                conn.commit()
+                return result
+            except Exception as e:
+                conn.rollback()
+                raise e
+    return wrapper
 
-# Here we set up databases at different stages in the storage process, e.g.
-# empty or already filled with some scans
-@pytest.fixture(scope="function")
-def empty_scan_db(root_dir):
-    '''
-    Just an empty scan database
-    '''
-    scan_db = ScanDatabase(root_dir)
-    yield scan_db
+class Db(Fs):
+    def __init__(self, root_dir, filename):
+        super().__init__(root_dir)
+        self.filename = filename
+        self.sqlite_path = os.path.join(self.storage_dir, self.filename)
+        self._initialize_db()
+
+    @sqlite_connection
+    def _initialize_db(self, cursor):
+        cursor.execute('''
+        CREATE TABLE ingress (
+            hash TEXT,
+            filepath TEXT,
+            filename TEXT,
+            UNIQUE(hash, filepath, filename)
+        )
+        ''')
+        cursor.execute('''
+        CREATE TABLE storage (
+            hash TEXT NOT NULL PRIMARY KEY,
+            filepath TEXT,
+            filename TEXT,
+            scanname TEXT,
+            FOREIGN KEY(hash) REFERENCES ingress(hash)
+        )
+        ''')
+
+    @sqlite_connection  
+    def add_scan_to_ingress_db(self, cursor, scan: Scan):
+        self.add_scan_to_ingress(scan)
+        cursor.execute(
+            f"INSERT INTO ingress (hash, filepath, filename) VALUES (?, ?, ?)",
+            (scan.hash, scan.path, scan.scanname)
+        )
+    def add_scans_to_ingress_db(self, scans: List[Scan]):
+        for scan in scans:
+            self.add_scan_to_ingress_db(scan)
+
+    @sqlite_connection  
+    def add_scan_to_storage_db(self, cursor, scan: List[Scan]):
+        # This is super important
+        self.add_scan_to_storage(scan)
+        cursor.execute(f"""
+            INSERT INTO storage (hash, filepath, filename, scanname) 
+            VALUES (?, ?, ?, ?)
+            """, (scan.hash, scan.path, scan.filename, scan.scanname))
+
+    def add_scans_to_storage_db(self, scans: List[Scan]):
+        for scan in scans:
+            self.add_scan_to_storage_db(scan)
+
+    @sqlite_connection 
+    def _read_all(self, cursor, table_name: str):
+        cursor.execute(f"SELECT * FROM {table_name}")
+        data = cursor.fetchall()
+        return data
+
+    def get_entries_from_ingress_db(self):
+        print(f"The files in the ingress table are:\n")
+        return self._read_all('ingress')
+    
+    def get_entries_from_storage_db(self):
+        print(f"The files in the storage table are:\n")
+        return self._read_all('storage')
+    
+    def __str__(self):
+        ingress = self.get_entries_from_ingress_db()
+        storage = self.get_entries_from_storage_db()
+        return(f"Ingress DB: {ingress}\n Storage DB: {storage}")
 
 @pytest.fixture(scope="function")
-def ingress_scan_db(root_dir, ingress_fs):
-    '''
-    A database that has the files from ingress already in its ingress table, but
-    neither in the storage db nor in storage
-    '''
-    ingress_db = ScanDatabase(root_dir)
-    ingress_table = IngressTable(ingress_db.sqlite_path)
-    ingress_table.write(ingress_fs.files)
-    yield ingress_db
+def empty_db(root_dir):
+    db = Db(root_dir, 'scans.sqlite')
+    return db
 
 @pytest.fixture(scope="function")
-def storage_scan_db(storage_fs, hashed_scans, storage_scans):
-    '''
-    A database that is already filled with 2 scans (in ingress and storage table)
-    '''
-    scan_db = ScanDatabase(storage_fs.root_dir)
-    ingress_table = IngressTable(scan_db.sqlite_path)
-    ingress_table.write_many(hashed_scans)
-    storage_table = StorageTable(scan_db.sqlite_path)
-    # here it curcial to give the storage scans the correct path, becuase they are in a non-hashed folder
-    for scan in storage_scans:
-        scan.path = os.path.join(storage_fs.storage_dir, scan.hash, scan.filename)
-    storage_table.write_many(storage_scans)
-    yield scan_db
+def ingress_only_db(root_dir, scans):
+    db = Db(root_dir, 'scans.sqlite')
+    db.add_scans_to_ingress_db(scans)
+    return db
+
+@pytest.fixture(scope="function")
+def storage_only_db(root_dir, scans):
+    db = Db(root_dir, 'scans.sqlite')
+    db.add_scans_to_storage_db(scans)
+    return db
+
+@pytest.fixture(scope="function")
+def classic_db(root_dir, scans):
+    db = Db(root_dir, 'scans.sqlite')
+    db.add_scans_to_ingress_db(scans[0:2])
+    db.add_scans_to_storage_db(scans[2:4])
+    return db
+
+
+
+    
+     
+
+    
+
+# # Here we set up databases at different stages in the storage process, e.g.
+# # empty or already filled with some scans
+# @pytest.fixture(scope="function")
+# def empty_scan_db(root_dir):
+#     '''
+#     Just an empty scan database
+#     '''
+#     scan_db = ScanDatabase(root_dir)
+#     yield scan_db
+
+# @pytest.fixture(scope="function")
+# def ingress_scan_db(root_dir, ingress_fs):
+#     '''
+#     A database that has the files from ingress already in its ingress table, but
+#     neither in the storage db nor in storage
+#     '''
+#     ingress_db = ScanDatabase(root_dir)
+#     ingress_table = IngressTable(ingress_db.sqlite_path)
+#     ingress_table.write(ingress_fs.files)
+#     yield ingress_db
+
+# @pytest.fixture(scope="function")
+# def storage_scan_db(storage_fs, hashed_scans, storage_scans):
+#     '''
+#     A database that is already filled with 2 scans (in ingress and storage table)
+#     '''
+#     scan_db = ScanDatabase(storage_fs.root_dir)
+#     ingress_table = IngressTable(scan_db.sqlite_path)
+#     ingress_table.write_many(hashed_scans)
+#     storage_table = StorageTable(scan_db.sqlite_path)
+#     # here it curcial to give the storage scans the correct path, becuase they are in a non-hashed folder
+#     for scan in storage_scans:
+#         scan.path = os.path.join(storage_fs.storage_dir, scan.hash, scan.filename)
+#     storage_table.write_many(storage_scans)
+#     yield scan_db
 
 
 

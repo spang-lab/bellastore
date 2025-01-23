@@ -11,14 +11,15 @@ from bellastore.filesystem.ingress import Ingress
 
 from conftest import Fs
 
+# Just for inspecting the fss
+def test_show_ingress_fs(ingress_only_fs: Fs):
+    print(str(ingress_only_fs))
+def test_show_storage_fs(storage_only_fs: Fs):
+    print(str(storage_only_fs))
+def test_show_classic_fs(classic_fs: Fs):
+    print(str(classic_fs))
 
-def test_filesystem(test_fs: Fs):
-    # files = Path(test_fs.storage_dir).rglob("*")
-    # file_paths = list(files)
-    # file_paths = [str(file_path) for file_path in file_paths]
-    # print(file_paths)
-    print(test_fs.get_files_from_ingress())
-    print(test_fs.get_files_from_storage())
+
 
 def test_scan_integrity(hashed_scans):
     for scan in hashed_scans:
