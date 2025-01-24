@@ -130,6 +130,7 @@ class Db(Fs):
         '''
         scans = self.get_valid_scans_from_ingress()
         self.insert_many(scans)
+        self.remove_empty_folders()
         return scans
 
 

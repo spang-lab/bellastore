@@ -45,6 +45,12 @@ def root_dir(tmp_path_factory):
 def scans(root_dir):
     tmp_path = root_dir / "old_scans"
     os.mkdir(tmp_path)
+    yield create_scans_in_subfolders(tmp_path, 4)
+
+@pytest.fixture(scope="function")
+def scans_in_subfolders(root_dir):
+    tmp_path = root_dir / "old_scans"
+    os.mkdir(tmp_path)
     yield create_scans(tmp_path, 4)
 
 @pytest.fixture(scope="function")
@@ -206,6 +212,13 @@ def classic_db(root_dir, scans):
     db = Db(root_dir, 'scans.sqlite')
     # db.add_scans_to_ingress_db(scans[0:2])
     db.add_scans_to_storage_db(scans[0:2])
+    return db
+
+@pytest.fixture(scope="function")
+def classic_db_subfolders(root_dir, scans_in_subfolders):
+    db = Db(root_dir, 'scans.sqlite')
+    # db.add_scans_to_ingress_db(scans[0:2])
+    db.add_scans_to_storage_db(scans_in_subfolders[0:2])
     return db
 
 

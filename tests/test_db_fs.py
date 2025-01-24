@@ -61,10 +61,15 @@ def check_ingress_db(db: Db, scan: Scan):
     # as in ingress we allow for duplicate hashes, issubset is enough
     assert {tuple((scan.hash, _j(db.ingress_dir, scan.filename) , scan.filename))}.issubset(set(get_scan_entry(db.sqlite_path, scan, 'ingress')))
 
+def check_ingress_db_subfolder(db: Db, scan: Scan):
+    # as in ingress we allow for duplicate hashes, issubset is enough
+    assert {tuple((scan.hash, _j(db.ingress_dir, scan.scanname, scan.filename) , scan.filename))}.issubset(set(get_scan_entry(db.sqlite_path, scan, 'ingress')))
+
 def check_storage_db(db: Db, scans: List[Scan]):
     # in storage we need strict equality
     for scan in scans:
         assert [(scan.hash, scan.path, scan.filename, scan.scanname)] == get_scan_entry(db.sqlite_path, scan, 'storage')
+
 
 
 # MAIN TESTS
@@ -99,6 +104,49 @@ def test_classic(root_dir, ingress_dir, classic_db):
     # Ingress checks
     for scan in scans:
         check_ingress_db(db, scan)
+    check_empty_ingress(db)
+
+    # Storage checks
+    for scan in scans:
+        if scan.path:
+            storage_scans.append(scan)
+        else:
+            check_not_in_storage(db, [scan])
+
+    check_storage(db, storage_scans)
+    check_storage_db(db, storage_scans)
+
+    print(str(db))
+
+def test_empty_from_subfolder(root_dir, ingress_dir_with_subfolders):
+    db = Db(root_dir, ingress_dir_with_subfolders, 'scans.sqlite')
+    # as the scans will be moved to storage we need to record their original paths
+    check_ingress(db, get_scans(db.ingress_dir))
+    scans = db.insert_from_ingress()
+
+    # Ingress checks
+    for scan in scans:
+        check_ingress_db_subfolder(db, scan)
+    check_empty_ingress(db)
+
+    # Storage checks
+    check_storage(db, scans)
+    check_storage_db(db, scans)
+
+    print(str(db)) 
+
+# Starting from already filled database
+def test_classic_subfolder(root_dir, ingress_dir_with_subfolders, classic_db_subfolders):
+    # db will be equal to classic_db
+    # classic db already holds 2 scans (also in storage)
+    db = Db(root_dir, ingress_dir_with_subfolders, 'scans.sqlite')
+    storage_scans = get_scans(_j(root_dir,'storage'))
+    check_ingress(db, get_scans(db.ingress_dir))
+    scans = db.insert_from_ingress()
+
+    # Ingress checks
+    for scan in scans:
+        check_ingress_db_subfolder(db, scan)
     check_empty_ingress(db)
 
     # Storage checks

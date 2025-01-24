@@ -61,6 +61,26 @@ class Fs:
         print(f"The files in {self.storage_dir} are")
         return self._get_files(self.storage_dir)
     
+    def remove_empty_folders(self):
+        """
+        Recursively remove empty folders in the given path.
+        
+        Args:
+            path (str): Root directory to start removing empty folders from
+        """
+        # Walk through directory tree in bottom-up order
+        for root, dirs, files in os.walk(self.root_dir, topdown=False):
+            for dir_name in dirs:
+                full_path = os.path.join(root, dir_name)
+                try:
+                    # If directory is empty, remove it
+                    if not os.listdir(full_path):
+                        os.rmdir(full_path)
+                        print(f"Removed empty folder: {full_path}")
+                except OSError as e:
+                    print(f"Error removing {full_path}: {e}")
+
+    
 
 
     def print_tree(self, path=None, prefix=''):
