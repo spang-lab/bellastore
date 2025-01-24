@@ -5,6 +5,7 @@ import pytest
 import sqlite3
 from typing import List, Dict, Tuple
 import functools
+import pandas as pd
 
 from bellastore.utils.scan import Scan
 from bellastore.database.database import ScanDatabase
@@ -30,11 +31,20 @@ def scans(tmp_path):
     os.mkdir(tmp_path)
     yield create_scans(tmp_path, 4)
 
+
+
 @pytest.fixture(scope="function")
-def duplicate_scans(tmp_path):
+def new_scans(tmp_path):
     tmp_path = tmp_path / "scans_2"
     os.mkdir(tmp_path)
     yield create_scans(tmp_path, 4)
+
+@pytest.fixture(scope="function")
+def ingress_dir(new_scans):
+    '''
+    The ingress dir is where the new scans are stored
+    '''
+    return os.path.dirname(new_scans[0].path)
 
 # FILESYSTEMS
 # The idea here is to set up filesystems with different layout
@@ -69,7 +79,7 @@ class Fs:
     def add_scan_to_ingress(self, scan: Scan):
         # Moving to ingress means hashing
         scan.hash_scan()
-        scan.move(self.ingress_dir)
+        # scan.move(self.ingress_dir)
     def add_scan_to_storage(self, scan: Scan):
         self.add_scan_to_ingress(scan)
         target_dir = os.path.join(self.storage_dir, scan.hash)
@@ -173,7 +183,7 @@ class Db(Fs):
         self.add_scan_to_ingress(scan)
         cursor.execute(
             f"INSERT INTO ingress (hash, filepath, filename) VALUES (?, ?, ?)",
-            (scan.hash, scan.path, scan.scanname)
+            (scan.hash, scan.path, scan.filename)
         )
     def add_scans_to_ingress_db(self, scans: List[Scan]):
         for scan in scans:
@@ -181,7 +191,8 @@ class Db(Fs):
 
     @sqlite_connection  
     def add_scan_to_storage_db(self, cursor, scan: List[Scan]):
-        # This is super important
+        self.add_scan_to_ingress_db(scan)
+        # This is super important in order to have hashing consistent
         self.add_scan_to_storage(scan)
         cursor.execute(f"""
             INSERT INTO storage (hash, filepath, filename, scanname) 
@@ -198,22 +209,25 @@ class Db(Fs):
         data = cursor.fetchall()
         return data
 
+    def _read_all_pd(self, table_name: str):
+        conn = sqlite3.connect(self.sqlite_path)
+        df = pd.read_sql_query(f"SELECT * FROM {table_name}", conn)
+        return df
+
     def get_entries_from_ingress_db(self):
-        print(f"The files in the ingress table are:\n")
         return self._read_all('ingress')
     
     def get_entries_from_storage_db(self):
-        print(f"The files in the storage table are:\n")
         return self._read_all('storage')
     
     def __str__(self):
-        ingress = self.get_entries_from_ingress_db()
-        storage = self.get_entries_from_storage_db()
-        return(f"Ingress DB: {ingress}\n Storage DB: {storage}")
+        ingress_df = self._read_all_pd('ingress')
+        storage_df = self._read_all_pd('storage')
+        return(f"Ingress DB:\n {ingress_df.to_string()}\n Storage DB:\n {storage_df.to_string()}")
 
 @pytest.fixture(scope="function")
 def empty_db(root_dir):
-    db = Db(root_dir, 'scans.sqlite')
+    db = Db(root_dir, 'scans_test.sqlite')
     return db
 
 @pytest.fixture(scope="function")
@@ -231,14 +245,13 @@ def storage_only_db(root_dir, scans):
 @pytest.fixture(scope="function")
 def classic_db(root_dir, scans):
     db = Db(root_dir, 'scans.sqlite')
-    db.add_scans_to_ingress_db(scans[0:2])
-    db.add_scans_to_storage_db(scans[2:4])
+    # db.add_scans_to_ingress_db(scans[0:2])
+    db.add_scans_to_storage_db(scans[0:2])
     return db
 
 
 
 
-# HELPERS
 # TODO: this we can write elegantly with the decorator
 def execute_sql(path: str, query: str, params: tuple = ()) -> list:
     """Helper function to execute SQL queries."""

@@ -71,14 +71,30 @@ def test_ingress_integration(ingress_fs):
 def test_ingress_integration(storage_fs):
     blueprint_integration(storage_fs)
 
-def test_insert(root_dir, scans, duplicate_scans):
+def test_insert(root_dir, scans):
+    # First we move everything to ingress
+    scan = scans[0]
+    scan.move(_j(root_dir,'ingress'))
     db = Db(root_dir, 'scans.sqlite')
-    db.insert(scans[0])
-    db.insert(duplicate_scans[0])
+    db.insert(scan)
     print(str(db))
-# TODO: Combination of both
 
-# TODO: running pipeline twice with new ingress in second round
+def test_insert_many(root_dir, scans):
+    for scan in scans:
+        scan.move(_j(root_dir,'ingress'))
+    db = Db(root_dir, 'scans.sqlite')
+    db.insert_many(scans)
+    print(str(db))
+
+def test_existing(root_dir, scans, classic_db):
+    # db will be equal to classic_db
+    db = Db(root_dir, 'scans.sqlite')
+    for scan in scans:
+        scan.move(_j(root_dir,'ingress'))
+    print(str(db))
+    db.insert_many(scans)
+    print(str(db))
+    
 
 
 
