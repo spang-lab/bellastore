@@ -25,10 +25,22 @@ class Fs:
         file_paths = list(files)
         file_paths = [str(file) for file in file_paths if file.is_file()]
         return file_paths
+    
+    def get_valid_scans_ingress(self) -> List[Scan]:
+        scans = []
+        files = self._get_files(self.ingress_dir)
+        for file in files:
+            scan = Scan(file)
+            if not scan.is_valid():
+                continue
+            scan.hash_scan()
+            print(scan.hash)
+            scans.append(scan)
+        return scans
 
     
     def _add_scan_to_ingress(self, scan: Scan):
-        # Moving to ingress means hashing
+        # Moving to ingress is equivalent to hashing
         scan.hash_scan()
     def add_scan_to_storage(self, scan: Scan):
         # self._add_scan_to_ingress(scan)
@@ -47,6 +59,8 @@ class Fs:
     def get_files_from_storage(self):
         print(f"The files in {self.storage_dir} are")
         return self._get_files(self.storage_dir)
+    
+
 
     def print_tree(self, path=None, prefix=''):
         if path is None:

@@ -23,11 +23,12 @@ def get_scans(dir):
     scans = []
     files = get_files(dir)
     for file in files:
-        if not file.split('.')[-1] == 'sqlite':
-            scan = Scan(file)
-            scan.hash_scan()
-            print(scan.hash)
-            scans.append(scan)
+        scan = Scan(file)
+        if not scan.is_valid():
+            continue
+        scan.hash_scan()
+        print(scan.hash)
+        scans.append(scan)
     return scans
 
 

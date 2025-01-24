@@ -3,6 +3,7 @@ import glob
 import hashlib
 import base64
 import shutil
+from typing import List
 
 from .constants import scan_extensions
 
@@ -136,6 +137,7 @@ class Scan():
         hash = base64.urlsafe_b64encode(hash.digest()).decode("utf-8")
         self.hash = hash
         return hash
+
 
 
 

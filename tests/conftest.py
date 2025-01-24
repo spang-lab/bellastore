@@ -77,6 +77,12 @@ class Fs:
         for scan in scans:
             self.add_scan_to_storage(scan)
 
+@pytest.fixture(scope="function")
+def classic_fs(root_dir, ingress_dir, new_scans):
+    fs = Fs(root_dir, ingress_dir)
+    fs.add_scans_to_ingress()
+
+
 
 # DATABSES
 def sqlite_connection(func):
