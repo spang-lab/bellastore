@@ -137,7 +137,7 @@ def test_empty_from_subfolder(root_dir, ingress_dir_with_subfolders):
 
 # Starting from already filled database
 def test_classic_subfolder(root_dir, ingress_dir_with_subfolders, classic_db_subfolders):
-    # db will be equal to classic_db
+    # db will be equal to classic_db_subfolders
     # classic db already holds 2 scans (also in storage)
     db = Db(root_dir, ingress_dir_with_subfolders, 'scans.sqlite')
     storage_scans = get_scans(_j(root_dir,'storage'))
