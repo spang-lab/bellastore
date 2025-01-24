@@ -1,6 +1,5 @@
 import os
 from os.path import join as _j
-import functools
 import sqlite3
 
 from bellastore.database.db import Db
@@ -22,7 +21,7 @@ def check_tables_exists(sqlite_path):
         table_exists(sqlite_path, table_name)
 
 
-def test_initialization(root_dir):
-    db = Db(root_dir, 'scans.sqlite')
+def test_initialization(root_dir, ingress_dir):
+    db = Db(root_dir, ingress_dir, 'scans.sqlite')
     check_tables_exists(db.sqlite_path)
     

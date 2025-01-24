@@ -4,7 +4,6 @@ import hashlib
 import base64
 import shutil
 
-from .state import State
 from .constants import scan_extensions
 
 
@@ -17,7 +16,6 @@ class Scan():
         **path** _str_ : full path to the scan
 
     Attributes:
-        state (State): the Scan's state
         path (str): the full path to the scan, including the filename and ending
         filename (str): just the filename, without the extension
         hash (str | None, default = None): the hash of the file, empty per default
@@ -31,7 +29,6 @@ class Scan():
     </p>
     """
     def __init__(self, path : str):
-        self.state = State()
         self.path = path
         self.scanname = self.get_scanname(path = self.path)
         self.filename = self.get_filename(path = self.path)
@@ -91,7 +88,6 @@ class Scan():
         Creates an url-safe, base64, utf-8 encoded hash for a scan.
         For scans that consist of more than a single file it hashes the whole directory.
         For non-hashable files it will return `None`.
-        It will not increase the scan's state automatically, but check if it at least is valid.
 
         Returns:
             hash (str | None): the scan's hash (if non-hashable this is `None`)
@@ -112,8 +108,8 @@ class Scan():
             return hash.digest()
 
         # Check if the slide even is hashable
-        if not self.state.has_state("valid"):
-            print(f"Slide does not (yet) have the state 'valid' (current: {self.state.get_state()}).")
+        if not self.is_valid():
+            print(f"Slide is not valid and thus can not be hashed.")
             return None
     # TODO: these cases are a bit confusing
         # Simple hasing for normal files
@@ -147,4 +143,4 @@ class Scan():
 
 
     def __repr__(self) -> str:
-        return f"Current State: {self.state}\nCurrent Path: {self.path}\nCurrent Filename: {self.filename}"
+        return f"\nCurrent Path: {self.path}\nCurrent Filename: {self.filename}"

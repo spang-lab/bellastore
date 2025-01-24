@@ -1,5 +1,4 @@
 import pytest
-import os
 from os.path import join as _j
 from pathlib import Path
 from bellastore.utils.scan import Scan
@@ -36,11 +35,7 @@ def target_dir(root_dir):
     sub = root_dir / "sub"
     sub.mkdir()
     return sub
-    
 
-# --------------- #
-# --- S C A N --- #
-# --------------- #
 
 def test_scan(ndpi_scan_path):
     """Tests the Scan initialization"""
@@ -59,7 +54,6 @@ def test_is_valid_scan(ndpi_scan_path, txt_scan_path):
 def test_hashing(ndpi_scan_path):
     """Test if the hasing works"""
     scan = Scan(path = ndpi_scan_path)
-    scan.state.move_forward()
     hash = scan.hash_scan()
     print(hash)
     assert hash

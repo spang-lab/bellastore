@@ -1,9 +1,7 @@
 import os
 from os.path import join as _j
-from pathlib import Path
-import pytest
 import sqlite3
-from typing import List, Dict, Tuple
+from typing import List
 import functools
 import pandas as pd
 
@@ -150,6 +148,7 @@ class Db(Fs):
     
     def __str__(self):
         # TODO: print_tree method should return a string to be passed to the return
+        print("\n")
         self.print_tree()
         ingress_df = self._read_all_pd('ingress')
         storage_df = self._read_all_pd('storage')

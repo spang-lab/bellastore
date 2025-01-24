@@ -1,10 +1,7 @@
 import os
 from os.path import join as _j
 from pathlib import Path
-import pytest
-import sqlite3
-from typing import List, Dict, Tuple
-import functools
+from typing import List
 
 from bellastore.utils.scan import Scan
 
