@@ -46,10 +46,11 @@ class Scan():
             filename (str): the filename without extension
         """
         return os.path.splitext(os.path.basename(path))[0]
-    
+    # TODO: Lukas extend this for mxrs, currently this only works for files
     def move(self, target_dir):
         try:
             source_path = self.path
+            # It is crucial to create the target dir before shutil.move
             os.makedirs(target_dir, exist_ok = True)
             shutil.move(self.path, target_dir)
             self.path = os.path.join(target_dir, self.filename)
@@ -82,7 +83,7 @@ class Scan():
         #scan_extensions = [".ndpi", ".svs", ".mrxs", ".tif"] # CARE
         return any(self.path.endswith(ending) for ending in scan_extensions)
 
-
+    # TODO: Lukas integrate and test for mxrs, more modular would also be nicer, e.g. _create_raw_hash,_hash_mxrs ...
     def hash_scan(self) -> str | None:
         """
         Creates an url-safe, base64, utf-8 encoded hash for a scan.
@@ -111,8 +112,6 @@ class Scan():
         if not self.is_valid():
             print(f"Slide is not valid and thus can not be hashed.")
             return None
-    # TODO: these cases are a bit confusing
-        # Simple hasing for normal files
         is_mrxs = self.path.endswith(".mrxs")
         if not is_mrxs:
             raw_hash = hash_file(self.path)
@@ -134,8 +133,6 @@ class Scan():
                 raw_hash = hash_file(file_path)
                 hash.update(raw_hash)
         hash.update(hash_file(self.path))
-        # TODO:
-        # we actually hash the scan
         hash = base64.urlsafe_b64encode(hash.digest()).decode("utf-8")
         self.hash = hash
         return hash
