@@ -6,12 +6,7 @@ import sqlite3
 
 from bellastore.utils.scan import Scan
 from bellastore.database.db import Db
-
-def get_files(dir):
-    files = Path(dir).rglob("*")
-    file_paths = list(files)
-    file_paths = {str(file) for file in file_paths if file.is_file()}
-    return file_paths
+from conftest import get_files
 
 def get_files_dirs(dir):
     files = Path(dir).rglob("*")
@@ -48,6 +43,7 @@ def check_ingress(db: Db, scans: List[Scan]):
 
 def check_storage(db: Db, scans: List[Scan]):
     files_in_storage = get_files(db.storage_dir)
+    print(files_in_storage)
     for scan in scans:
         assert {scan.path}.issubset(files_in_storage)
     assert {db.sqlite_path}.issubset(files_in_storage)
@@ -61,9 +57,9 @@ def check_empty_ingress(db: Db):
     assert get_files_dirs(db.ingress_dir) == set()
 
 # Db checks
-def check_ingress_db(db: Db, original_path, scan: Scan):
+def check_ingress_db(db: Db, scan: Scan):
     # as in ingress we allow for duplicate hashes, issubset is enough
-    assert {tuple((scan.hash, original_path , scan.filename))}.issubset(set(get_scan_entry(db.sqlite_path, scan, 'ingress')))
+    assert {tuple((scan.hash, _j(db.ingress_dir, scan.filename) , scan.filename))}.issubset(set(get_scan_entry(db.sqlite_path, scan, 'ingress')))
 
 def check_storage_db(db: Db, scans: List[Scan]):
     # in storage we need strict equality
@@ -74,51 +70,46 @@ def check_storage_db(db: Db, scans: List[Scan]):
 # MAIN TESTS
 
 # Starting from empty database
-def test_empty(root_dir, ingress_dir, new_scans):
+def test_empty(root_dir, ingress_dir):
     db = Db(root_dir, ingress_dir, 'scans.sqlite')
-    # as the scans will be moved to storage we newwd to record their original paths
-    original_paths = []
-    for scan in new_scans:
-        original_paths.append(scan.path)
-    check_ingress(db, new_scans)
-    db.insert_many(new_scans)
+    # as the scans will be moved to storage we need to record their original paths
+    check_ingress(db, get_scans(db.ingress_dir))
+    scans = db.insert_from_ingress()
 
     # Ingress checks
-    for scan, original_path in zip(new_scans, original_paths):
-        check_ingress_db(db, original_path, scan)
+    for scan in scans:
+        check_ingress_db(db, scan)
     check_empty_ingress(db)
 
     # Storage checks
-    check_storage(db, new_scans)
-    check_storage_db(db, new_scans)
+    check_storage(db, scans)
+    check_storage_db(db, scans)
 
     print(str(db))   
 
 # Starting from already filled database
-def test_classic(root_dir, ingress_dir, new_scans, classic_db):
+def test_classic(root_dir, ingress_dir, classic_db):
     # db will be equal to classic_db
-    # classic db already holds scans[0:2]=new_scans[0:2] (also in storage)
+    # classic db already holds 2 scans (also in storage)
     db = Db(root_dir, ingress_dir, 'scans.sqlite')
     storage_scans = get_scans(_j(root_dir,'storage'))
-    # as the scans will be moved to storage we newwd to record their original paths
-    original_paths = []
-    for scan in new_scans:
-        original_paths.append(scan.path)
-    check_ingress(db, new_scans)
-    db.insert_many(new_scans)
+    check_ingress(db, get_scans(db.ingress_dir))
+    scans = db.insert_from_ingress()
 
     # Ingress checks
-    for scan, original_path in zip(new_scans, original_paths):
-        check_ingress_db(db, original_path, scan)
+    for scan in scans:
+        check_ingress_db(db, scan)
     check_empty_ingress(db)
 
     # Storage checks
-    # as we moved new_scan[2:4] to storage we append them to the storage scans
-    storage_scans.extend(new_scans[2:4])
+    for scan in scans:
+        if scan.path:
+            storage_scans.append(scan)
+        else:
+            check_not_in_storage(db, [scan])
+
     check_storage(db, storage_scans)
-    # print(storage_scans)
     check_storage_db(db, storage_scans)
-    check_not_in_storage(db, new_scans[0:2])
 
     print(str(db))
 

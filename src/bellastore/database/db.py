@@ -123,6 +123,14 @@ class Db(Fs):
     def insert_many(self, scans: List[Scan]):
         for scan in scans:
             self.insert(scan)
+    
+    def insert_from_ingress(self):
+        '''
+        This is the main insert function
+        '''
+        scans = self.get_valid_scans_from_ingress()
+        self.insert_many(scans)
+        return scans
 
 
 

@@ -24,4 +24,5 @@ def check_tables_exists(sqlite_path):
 def test_initialization(root_dir, ingress_dir):
     db = Db(root_dir, ingress_dir, 'scans.sqlite')
     check_tables_exists(db.sqlite_path)
+
     

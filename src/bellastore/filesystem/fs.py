@@ -26,15 +26,16 @@ class Fs:
         file_paths = [str(file) for file in file_paths if file.is_file()]
         return file_paths
     
-    def get_valid_scans_ingress(self) -> List[Scan]:
+    def get_valid_scans_from_ingress(self) -> List[Scan]:
         scans = []
+        print(f'Reading files from ingress directory {self.ingress_dir}')
         files = self._get_files(self.ingress_dir)
         for file in files:
             scan = Scan(file)
             if not scan.is_valid():
+                print(f'Discarding {scan.path} as non valid')
                 continue
-            scan.hash_scan()
-            print(scan.hash)
+            print(f'Valid scan: {scan.path}')
             scans.append(scan)
         return scans
 

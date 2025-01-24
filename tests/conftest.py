@@ -20,6 +20,18 @@ def create_scans(path: Path, amount = 4) -> List[Scan]:
         scans.append(scan)
     return scans
 
+def create_scans_in_subfolders(path: Path, amount = 4) -> List[Scan]:
+    scans = []
+    for i in range(amount):
+        p = path / f"scan_{i}"
+        os.mkdir(p)
+        p = p / f"scan_{i}.ndpi"
+        p.write_text(f"Content of scan_{i}.ndpi", encoding="utf-8")
+        scan = Scan(str(p))
+        scans.append(scan)
+    return scans
+
+
 # FILESYSTEMS
 # The idea here is to set up filesystems with different layout
 
@@ -42,11 +54,26 @@ def new_scans(root_dir):
     yield create_scans(tmp_path, 4)
 
 @pytest.fixture(scope="function")
+def new_scans_in_subfolders(root_dir):
+    tmp_path = root_dir / "new_scans"
+    os.mkdir(tmp_path)
+    yield create_scans_in_subfolders(tmp_path, 4)
+
+@pytest.fixture(scope="function")
 def ingress_dir(new_scans):
     '''
     The ingress dir is where the new scans are stored
     '''
     return os.path.dirname(new_scans[0].path)
+
+@pytest.fixture(scope="function")
+def ingress_dir_with_subfolders(new_scans_in_subfolders):
+    '''
+    The ingress dir is where the new scans are stored
+    '''
+    return os.path.dirname(os.path.dirname(new_scans_in_subfolders[0].path))
+
+
 
 # blueprint fs
 class Fs:
@@ -77,10 +104,13 @@ class Fs:
         for scan in scans:
             self.add_scan_to_storage(scan)
 
-@pytest.fixture(scope="function")
-def classic_fs(root_dir, ingress_dir, new_scans):
-    fs = Fs(root_dir, ingress_dir)
-    fs.add_scans_to_ingress()
+
+# @pytest.fixture(scope="function")
+# def classic_fs(root_dir, scans):
+#     fs = Fs(root_dir)
+#     fs.add_scans_to_ingress(scans[0:2])
+#     fs.add_scans_to_storage(scans[2:4])
+#     return fs
 
 
 
@@ -177,3 +207,11 @@ def classic_db(root_dir, scans):
     # db.add_scans_to_ingress_db(scans[0:2])
     db.add_scans_to_storage_db(scans[0:2])
     return db
+
+
+# Helpers
+def get_files(dir):
+    files = Path(dir).rglob("*")
+    file_paths = list(files)
+    file_paths = {str(file) for file in file_paths if file.is_file()}
+    return file_paths
