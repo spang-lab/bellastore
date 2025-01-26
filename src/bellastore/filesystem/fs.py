@@ -33,7 +33,7 @@ class Fs:
         for file in files:
             scan = Scan(file)
             if not scan.is_valid():
-                print(f'Discarding {scan.path} as non valid')
+                # print(f'Non-valid {scan.path}')
                 continue
             print(f'Valid scan: {scan.path}')
             scans.append(scan)
