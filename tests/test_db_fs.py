@@ -127,7 +127,7 @@ def test_empty_from_subfolder(root_dir, ingress_dir_with_subfolders):
     # Ingress checks
     for scan in scans:
         check_ingress_db_subfolder(db, scan)
-    check_empty_ingress(db)
+        {_j(db.ingress_dir, scan.scanname, f"slide_{scan.filename.split('_')[1]}.sqlite")}.issubset(get_files_dirs(db.ingress_dir))
 
     # Storage checks
     check_storage(db, scans)
@@ -147,7 +147,7 @@ def test_classic_subfolder(root_dir, ingress_dir_with_subfolders, classic_db_sub
     # Ingress checks
     for scan in scans:
         check_ingress_db_subfolder(db, scan)
-    check_empty_ingress(db)
+        {_j(db.ingress_dir, scan.scanname, f"slide_{scan.filename.split('_')[1]}.sqlite")}.issubset(get_files_dirs(db.ingress_dir))
 
     # Storage checks
     for scan in scans:

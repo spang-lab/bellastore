@@ -24,12 +24,19 @@ def create_scans_in_subfolders(path: Path, amount = 4) -> List[Scan]:
     scans = []
     for i in range(amount):
         p = path / f"scan_{i}"
-        os.mkdir(p)
+        os.makedirs(p, exist_ok = True)
         p = p / f"scan_{i}.ndpi"
         p.write_text(f"Content of scan_{i}.ndpi", encoding="utf-8")
         scan = Scan(str(p))
         scans.append(scan)
     return scans
+
+def create_additional_files_in_subfolders(path: Path, amount = 4) -> List[Scan]:
+    for i in range(amount):
+        p = path / f"scan_{i}"
+        os.makedirs(p, exist_ok = True)
+        p = p / f"slide_{i}.sqlite"
+        p.write_text(f"Content of slide_{i}.sqlte", encoding="utf-8")
 
 
 # FILESYSTEMS
@@ -62,8 +69,14 @@ def new_scans(root_dir):
 @pytest.fixture(scope="function")
 def new_scans_in_subfolders(root_dir):
     tmp_path = root_dir / "new_scans"
-    os.mkdir(tmp_path)
+    os.makedirs(tmp_path, exist_ok = True)
     yield create_scans_in_subfolders(tmp_path, 4)
+
+@pytest.fixture(scope="function")
+def additional_files_in_subfolders(root_dir):
+    tmp_path = root_dir / "new_scans"
+    os.makedirs(tmp_path, exist_ok = True)
+    create_additional_files_in_subfolders(tmp_path, 4)
 
 @pytest.fixture(scope="function")
 def ingress_dir(new_scans):
@@ -73,7 +86,7 @@ def ingress_dir(new_scans):
     return os.path.dirname(new_scans[0].path)
 
 @pytest.fixture(scope="function")
-def ingress_dir_with_subfolders(new_scans_in_subfolders):
+def ingress_dir_with_subfolders(new_scans_in_subfolders, additional_files_in_subfolders):
     '''
     The ingress dir is where the new scans are stored
     '''
