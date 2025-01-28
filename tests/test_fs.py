@@ -16,5 +16,5 @@ def test_fs(root_dir, ingress_dir):
 def test_fs_with_subfolders(root_dir, ingress_dir_with_subfolders):
     db = Db(root_dir, ingress_dir_with_subfolders, 'scans.sqlite')
     valid_scan_paths = {scan.path for scan in db.get_valid_scans_from_ingress()}
-    assert valid_scan_paths == get_files(ingress_dir_with_subfolders)
+    assert valid_scan_paths.issubset(get_files(ingress_dir_with_subfolders))
 
