@@ -34,13 +34,10 @@ def main():
         print(str(db))
     else:
         db = Db(root_dir, ingress_dir, sqlite_name)
+        print('The storage currently looks like this')
+        print(str(db))
         valid_scans = db.get_valid_scans_from_ingress()
-        if valid_scans:
-            print('\nSummary of valid scans:')
-            for scan in valid_scans:
-                print(scan.path)
-        else:
-            print('\nNo valid scans.')
+        print(f'Total amount of valid scans to be moved {len(valid_scans)}.')
 
 
 if __name__ == '__main__':
