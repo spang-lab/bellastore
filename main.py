@@ -37,7 +37,10 @@ def main():
         print('The storage currently looks like this')
         print(str(db))
         valid_scans = db.get_valid_scans_from_ingress()
+        formats = set([scan.filename.split('.')[1] for scan in valid_scans])
+        print(formats)
         print(f'Total amount of valid scans to be moved {len(valid_scans)}.')
+        print(f'Formats present {formats}')
 
 
 if __name__ == '__main__':
