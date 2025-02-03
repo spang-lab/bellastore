@@ -181,7 +181,7 @@ class Db(Fs):
             # Generate backup filename with timestamp
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             db_name = Path(self.sqlite_path).stem
-            backup_path = Path(self.backup_dir) / f"{db_name}_backup_{timestamp}.db"
+            backup_path = Path(self.backup_dir) / f"{db_name}_backup_{timestamp}.sqlite"
             
             # Ensure source database exists
             if not Path(self.sqlite_path).exists():
@@ -206,7 +206,7 @@ class Db(Fs):
     def _cleanup_old_backups(self, max_backups):
         """Remove oldest backups if exceeding max_backups limit"""
         backups = sorted(
-            Path(self.backup_dir).glob('*_backup_*.db'),
+            Path(self.backup_dir).glob('*_backup_*.sqlite'),
             key=os.path.getctime
         )
         
