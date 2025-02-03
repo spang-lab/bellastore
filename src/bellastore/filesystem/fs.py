@@ -7,7 +7,7 @@ from bellastore.utils.scan import Scan
 
 # blueprint fs
 class Fs:
-    def __init__(self, root_dir, ingress_dir):
+    def __init__(self, root_dir, ingress_dir: None|str):
         '''
         A Fs only contains a storage and an ingress (and of course a root).
         So this serves as a blueprint for all subsequent filesystems
@@ -16,8 +16,12 @@ class Fs:
         self.ingress_dir = ingress_dir
         self.storage_dir = _j(root_dir, "storage")
         os.makedirs(self.storage_dir, exist_ok = True)
+        # we also provide the option just to look at our fs/db without inserting from an ingress
         self.ingress_dir = ingress_dir
-        os.makedirs(self.ingress_dir, exist_ok = True)
+        if self.ingress_dir:
+            os.makedirs(self.ingress_dir, exist_ok = True)
+        self.backup_dir = _j(root_dir, "backup")
+        os.makedirs(self.backup_dir, exist_ok=True)
 
     @staticmethod
     def _get_files(dir):

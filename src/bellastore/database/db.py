@@ -4,6 +4,9 @@ import sqlite3
 from typing import List
 import functools
 import pandas as pd
+from datetime import datetime
+import logging
+from pathlib import Path
 
 from bellastore.filesystem.fs import Fs
 from bellastore.utils.scan import Scan
@@ -153,6 +156,64 @@ class Db(Fs):
     
     def get_entries_from_storage_db(self):
         return self._read_all('storage')
+    
+    def setup_logging(self):
+        """Configure logging to both file and console"""
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(levelname)s - %(message)s',
+            handlers=[
+                logging.FileHandler(_j(self.backup_dir, 'database_backup.log')),
+                logging.StreamHandler()
+            ]
+        )
+    
+
+    def create_backup(self, max_backups=10):
+        """
+        Create a backup of the SQLite database
+        
+        Args:
+            max_backups (int): Maximum number of backup files to keep
+        """
+        try:
+            
+            # Generate backup filename with timestamp
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            db_name = Path(self.sqlite_path).stem
+            backup_path = Path(self.backup_dir) / f"{db_name}_backup_{timestamp}.db"
+            
+            # Ensure source database exists
+            if not Path(self.sqlite_path).exists():
+                raise FileNotFoundError(f"Database file not found: {self.sqlite_path}")
+            
+            # Create backup using SQLite's backup API
+            with sqlite3.connect(self.sqlite_path) as source:
+                with sqlite3.connect(str(backup_path)) as target:
+                    source.backup(target)
+            
+            logging.info(f"Backup created successfully: {backup_path}")
+            
+            # Clean up old backups if exceeding max_backups
+            self._cleanup_old_backups(max_backups)
+            
+            return True
+            
+        except Exception as e:
+            logging.error(f"Backup failed: {str(e)}")
+            return False
+
+    def _cleanup_old_backups(self, max_backups):
+        """Remove oldest backups if exceeding max_backups limit"""
+        backups = sorted(
+            Path(self.backup_dir).glob('*_backup_*.db'),
+            key=os.path.getctime
+        )
+        
+        while len(backups) > max_backups:
+            oldest_backup = backups.pop(0)
+            oldest_backup.unlink()
+            logging.info(f"Removed old backup: {oldest_backup}")    
 
     
     def __str__(self):
