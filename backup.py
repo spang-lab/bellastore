@@ -4,7 +4,7 @@ import argparse
 def main():
     cli = argparse.ArgumentParser()
     cli.add_argument(
-        '--root_dir', type = str, default = '/data/deep-learning/test',
+        '--root_dir', type = str, default = '/data/deep-learning/storage',
        help = 'Directory where sqlite and storage will be initialized under, i.e. root_dir/storage'
     )
     cli.add_argument(
