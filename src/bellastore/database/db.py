@@ -13,9 +13,10 @@ from bellastore.utils.scan import Scan
 
 # DATABSES
 def sqlite_connection(func):
+    ''' 
+    Decorator allowing for comprehensive sqlite connection
     '''
-    This decorator is genious
-    '''
+    
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
         with sqlite3.connect(self.sqlite_path) as conn:
@@ -30,6 +31,23 @@ def sqlite_connection(func):
     return wrapper
 
 class Db(Fs):
+    ''' 
+    A class representing an sqlite databse abstracting the underlying file system
+
+    Attributes
+    ----------
+    filename: str
+        The name of the database, classically `scans.sqlite`
+    sqlite_path:
+        The path to the database.
+        The databse is placed always on top level within the storage directory.
+    
+    Methods
+    -------
+    insert_from_ingress:
+        The method for inserting several scans to the storage
+    '''
+
     def __init__(self, root_dir, ingress_dir, filename):
         super().__init__(root_dir, ingress_dir)
         self.filename = filename
@@ -99,8 +117,13 @@ class Db(Fs):
             self.add_scan_to_storage_db(scan)
 
     def insert(self, scan: Scan):
-        '''
-        This is where all comes together
+        ''' 
+        Inserts a single scan into the storage database.
+
+        Inserting into the storage follows multiple steps:
+        - check wether scan is already recorded in ingress
+        - record scan in storage db (if not existent)
+        - move scan file to storage (if not existent)
         '''
         scan.hash_scan()
         print(f"\nStarting insert pipeline for {scan.hash}:")
@@ -121,6 +144,7 @@ class Db(Fs):
             return
         # In this case the scan is not recorded, thus also not in storage so we run the whole pipeline
         # This will also automatically care about the storage backend recursively
+        # TODO: the scan is already hashed at this place, so we do not need to hash it again
         self.add_scan_to_storage_db(scan)
     
     def insert_many(self, scans: List[Scan]):
@@ -128,8 +152,10 @@ class Db(Fs):
             self.insert(scan)
     
     def insert_from_ingress(self):
-        '''
-        This is the main insert function
+        ''' This is the main insert function
+
+        This function retrieves valid scans from the ingress, inserts
+        those into the storage and removes the empty folders from the ingress.
         '''
         scans = self.get_valid_scans_from_ingress()
         self.insert_many(scans)

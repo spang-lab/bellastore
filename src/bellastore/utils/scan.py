@@ -49,6 +49,9 @@ class Scan():
         return os.path.splitext(os.path.basename(path))[0]
     # TODO: Lukas extend this for mxrs, currently this only works for files
     def move(self, target_dir):
+        '''
+        Moves a scan file into the target directory
+        '''
         try:
             source_path = self.path
             # It is crucial to create the target dir before shutil.move

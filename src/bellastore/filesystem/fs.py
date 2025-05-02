@@ -7,11 +7,39 @@ from bellastore.utils.scan import Scan
 
 # blueprint fs
 class Fs:
+    ''' 
+    A class representing a simple file system holding:
+    - a storage directory
+    - an ingress directory
+    - a backup directory (for backing up the database)
+
+    Attributes
+    ----------
+    root_dir: str
+        The root of the fs
+    ingress_dir: str | None
+        The directory holding new candidate scans to be moved to storage.
+        If none there we use the class just for inspecting the current state of the fs
+    storage_dir: str
+        The directory holding all already recorded scans
+    backup_dir: str
+        The directory holding database backups
+    
+    Methods
+    -------
+    _add_scan_to_ingress:
+        Method that adds a scan to the ingress. In the sense of the fs the scan is already
+        within the ingress so adding means hashing.
+    add_scan_to_storage:
+        Method to move a scan from the ingress to storage within the file system.
+        The recording in the databse will be handled by the Db class
+    get_valid_scans_from_ingress:
+        Method that scans the ingress directory for valid scans
+    remove_empty_folders:
+        Method to remove empty folders, resulting from moving scans to storage
+    '''
+
     def __init__(self, root_dir, ingress_dir: None|str):
-        '''
-        A Fs only contains a storage and an ingress (and of course a root).
-        So this serves as a blueprint for all subsequent filesystems
-        '''
         self.root_dir = root_dir
         self.ingress_dir = ingress_dir
         self.storage_dir = _j(root_dir, "storage")
@@ -31,6 +59,10 @@ class Fs:
         return file_paths
     
     def get_valid_scans_from_ingress(self) -> List[Scan]:
+        '''
+        Method that scans the ingress directory for valid scans
+        '''
+
         scans = []
         print(f'Reading files from ingress directory {self.ingress_dir}')
         files = self._get_files(self.ingress_dir)
@@ -45,9 +77,17 @@ class Fs:
 
     
     def _add_scan_to_ingress(self, scan: Scan):
+        '''
+        Method that adds a scan to the ingress, i.e. hashes the scan.
+        '''
+
         # Moving to ingress is equivalent to hashing
         scan.hash_scan()
     def add_scan_to_storage(self, scan: Scan):
+        '''
+        Main function moving scans from ingress to storage
+        '''
+        
         # self._add_scan_to_ingress(scan)
         target_dir = os.path.join(self.storage_dir, scan.hash)
         scan.move(target_dir)
@@ -66,12 +106,9 @@ class Fs:
         return self._get_files(self.storage_dir)
     
     def remove_empty_folders(self):
-        """
-        Recursively remove empty folders in the given path.
-        
-        Args:
-            path (str): Root directory to start removing empty folders from
-        """
+        '''
+        Recursively remove empty folders, resulting from moving scans ton storage
+        '''
         # Walk through directory tree in bottom-up order
         for root, dirs, files in os.walk(self.root_dir, topdown=False):
             for dir_name in dirs:
