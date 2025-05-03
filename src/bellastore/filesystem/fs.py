@@ -107,12 +107,14 @@ class Fs:
     
     def remove_empty_folders(self):
         '''
-        Recursively remove empty folders, resulting from moving scans ton storage
+        Recursively remove empty folders, resulting from moving scans to storage.
         '''
         # Walk through directory tree in bottom-up order
         for root, dirs, files in os.walk(self.root_dir, topdown=False):
             for dir_name in dirs:
                 full_path = os.path.join(root, dir_name)
+                if full_path == self.backup_dir:
+                    continue
                 try:
                     # If directory is empty, remove it
                     if not os.listdir(full_path):

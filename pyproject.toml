@@ -6,8 +6,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bellastore"
-version = "0.0.1"
-description = "Storage manager for FDLP project"
+version = "1.0.0"
+description = "Digital pathology storage manager for WSI scans"
 readme = "README.md"
 authors = [
     {name = "Paul Huettl"},

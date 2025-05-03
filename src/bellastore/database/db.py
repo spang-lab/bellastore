@@ -155,7 +155,11 @@ class Db(Fs):
         ''' This is the main insert function
 
         This function retrieves valid scans from the ingress, inserts
-        those into the storage and removes the empty folders from the ingress.
+        those into the storage and removes the resulting empty folders from the ingress.
+
+        Return
+        ------
+            Valid scans (no matter if already in storage or not)
         '''
         scans = self.get_valid_scans_from_ingress()
         self.insert_many(scans)
