@@ -1,3 +1,5 @@
+# This test module holds the integration tests
+
 import os
 from os.path import join as _j
 from pathlib import Path

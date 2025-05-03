@@ -5,15 +5,15 @@ def main():
     cli = argparse.ArgumentParser()
     cli.add_argument(
         '--root_dir', type = str, default = '/data/deep-learning/test',
-       help = 'Directory where sqlite and storage will be initialized under, i.e. root_dir/storage'
+       help = 'Directory where sqlite and storage will be initialized under, in particular root_dir/storage/scans.sqlite'
     )
     cli.add_argument(
         '--ingress_dir', type = str, default = '/data/deep-learning/test/slides',
-        help = 'Directory holding scans'
+        help = 'Directory holding scans to be inserted into storage.'
     )
     cli.add_argument(
         '--sqlite_name', type = str, default = 'scans.sqlite',
-        help = 'Name of the sqlite file'
+        help = 'Name of the sqlite database file'
     )
     cli.add_argument(
         '--move', action=argparse.BooleanOptionalAction,
