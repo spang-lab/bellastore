@@ -47,7 +47,7 @@ class Scan():
             filename (str): the filename without extension
         """
         return os.path.splitext(os.path.basename(path))[0]
-    # TODO: Lukas extend this for mxrs, currently this only works for files
+    # TODO: extend this for mxrs, currently this only works for files
     def move(self, target_dir):
         '''
         Moves a scan file into the target directory
