@@ -16,26 +16,34 @@ def main():
         help = 'Name of the sqlite database file'
     )
     cli.add_argument(
+        '--verbose', action=argparse.BooleanOptionalAction,
+        help = 'This will log the whole content of the database and the storage which might clutter the output'
+    )
+    cli.add_argument(
         '--move', action=argparse.BooleanOptionalAction,
         help = 'This needs to be explicitly set in order to mess with the filesystem, otherwise only dry run will be done.'
     )
+
     args = cli.parse_args()
     root_dir = args.root_dir
     ingress_dir = args.ingress_dir
     sqlite_name = args.sqlite_name
+    verbose = args.verbose
     move = args.move
+    
 
     db = Db(root_dir, ingress_dir, sqlite_name)
-    print(str(db))
 
-    if(move):
+    if move:
         db.insert_from_ingress()
-        print('Done, your final storage looks like:')
-        print(str(db))
+        if verbose:
+            print('Done, your final storage looks like:')
+            print(str(db))
     else:
         db = Db(root_dir, ingress_dir, sqlite_name)
-        print('The storage currently looks like this')
-        print(str(db))
+        if verbose:
+            print('The storage currently looks like this')
+            print(str(db))
         valid_scans = db.get_valid_scans_from_ingress()
         formats = set([scan.filename.split('.')[1] for scan in valid_scans])
         print(formats)

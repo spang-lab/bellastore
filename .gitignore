@@ -1,6 +1,9 @@
 # Data and test data folders
 data/*
 
+# Distribution
+build/
+
 # IDE.related folders
 .vscode/
 .idea/
