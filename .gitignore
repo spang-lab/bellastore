@@ -3,6 +3,7 @@ data/*
 
 # Distribution
 build/
+dist/
 
 # IDE.related folders
 .vscode/

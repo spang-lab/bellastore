@@ -20,8 +20,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "pandas >=2.0.0",
-    "python-dateutil >= 2.9.0"
+    "pandas >= 2.0.0"
 ]
 
 [project.scripts]

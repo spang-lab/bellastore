@@ -6,9 +6,12 @@ via our custom digital pathology API `bellapi`.
 
 ## Installation
 
+The source code is currently hosted under [https://github.com/spang-lab/bellastore](https://github.com/spang-lab/bellastore).
+
+Binary installers are available at PyPi.
+
 ```sh
-# After cloning the repository
-pip install -e .
+pip install bellastore
 ```
 
 ## Usage
@@ -36,7 +39,7 @@ bellastore-backup --root_dir <directory holding storage and backup> \
 
 ## Documentation
 
-Under [docs/demo.ipynb](docs/demo.ipynb) we provide a demo of the main usecase of the package, that leads you trough the steps of the main integration test [tests/test_db_fs.py::test_classic](tests/test_db_fs.py::test_classic).\
+Along with the [source code](https://github.com/spang-lab/bellastore), under `docs/demo.ipynb` we provide a demo of the main usecase of the package, that leads you trough the steps of the main integration test `tests/test_db_fs.py::test_classic`.\
 The package comes with a test suite, serving to demonstrate the functionality of each unit of the package.
 
 
