@@ -6,8 +6,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bellastore"
-version = "1.0.0"
-authors = [
+version = "1.0.1"
+authors = [{name = "Paul Huettl and Lukas Wolfseher"}]
+maintainers = [
     { name = "Paul Huettl", email = "paulhuettl@web.de" },
     { name = "Lukas Wolfseher", email = "lukas.wolfseher@informatik.uni-regensburg.de" },
 ]
